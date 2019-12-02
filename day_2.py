@@ -38,7 +38,11 @@ def parse_command(data, cursor):
         2: {'op': mul_operation, 'n_args': 3}
     }
 
-    op = op_codes.get(data[cursor])['op']
+    try:
+        op = op_codes.get(data[cursor])['op']
+    except TypeError:
+        raise RuntimeError(f"Failed to convert number {data[cursor]} at cursor {cursor} to opcode")
+
     n_args = op_codes.get(data[cursor])['n_args']
     arg_locs = list(range(cursor + 1, cursor + n_args + 1)) 
     next_cursor = cursor + n_args + 1
@@ -62,11 +66,11 @@ def compute(data):
 
 def get_result(data):
     # Fix 1202 bug
-    data = data.copy()
-    data[1] = 12
-    data[2] = 2
+    d = data.copy()
+    d[1] = 12
+    d[2] = 2
 
-    result = compute(data)[0]
+    result = compute(d)[0]
     return result
 
 if __name__ == "__main__":
