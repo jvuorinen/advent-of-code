@@ -14,6 +14,6 @@ def get_fuel_reqs(mass):
 if __name__ == "__main__":
     data = list(pd.read_csv("data/input_1.csv", header=None)[0])
     
-    print(sum(map(get_fuel_simple, data)))
-    print(sum(map(get_fuel_reqs, data)))
+    print("Part 1 result: ", sum(map(get_fuel_simple, data)))
+    print("Part 1 result: ", sum(map(get_fuel_reqs, data)))
 
