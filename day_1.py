@@ -1,4 +1,4 @@
-import pandas as pd
+from common import read_input
 
 def get_fuel_simple(mass):
     return int(mass/3) - 2
@@ -12,8 +12,9 @@ def get_fuel_reqs(mass):
 
 
 if __name__ == "__main__":
-    data = list(pd.read_csv("data/input_1.csv", header=None)[0])
-    
+    raw_in = read_input('data/day_1.txt')
+    data = [int(i) for i in raw_in]
+
     print("Part 1 result: ", sum(map(get_fuel_simple, data)))
     print("Part 1 result: ", sum(map(get_fuel_reqs, data)))
 

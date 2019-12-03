@@ -1,5 +1,6 @@
 import logging
-import data.day_3_wires
+
+from common import read_input
 
 def parse_dir(c):
     d = {
@@ -22,10 +23,9 @@ def wire_to_coords(wire):
             res.append(loc)
     return res
 
-def parse_coords_from_input(in_str):
-    wires = in_str.split('\n')
+def parse_coords_from_input(raw_in):
     parse_wire = lambda x: wire_to_coords(x.split(','))
-    w1, w2 = map(parse_wire, wires)
+    w1, w2 = map(parse_wire, raw_in)
     return w1, w2
 
 def manhattan_dist(a, b):
@@ -59,9 +59,9 @@ def get_least_steps_intersection(w1, w2):
     return closest[1]
 
 if __name__ == "__main__":
-    in_wires = data.day_3_wires.in_wires
+    raw_in = read_input('data/day_3.txt')
 
-    w1, w2 = parse_coords_from_input(in_wires)
+    w1, w2 = parse_coords_from_input(raw_in)
 
     # Part 1
     print("Part 1 answer: ", get_closest_intersection_distance(w1, w2))

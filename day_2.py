@@ -1,7 +1,7 @@
 from typing import List
 import logging
 
-import data.programs 
+from common import read_input
 
 logging.getLogger().setLevel('DEBUG')
 
@@ -93,12 +93,13 @@ def find_arguments(program, desired_value):
     return results.get(desired_value, "Desired result not found")
 
 
-
 if __name__ == "__main__":
     logging.getLogger().setLevel("INFO")
 
+    raw_in = read_input('data/day_2.txt')
+    prog = [int(i) for i in raw_in[0].split(',')]
+
     # Part 1
-    prog = data.programs.program_day_2
     res_1, _  = run_program(prog, 12, 2)
     print("Part 1 result:",  str(res_1))
 
