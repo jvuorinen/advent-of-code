@@ -5,10 +5,6 @@ from common import read_input
 
 logging.getLogger().setLevel('DEBUG')
 
-# TODO Should be dynamic
-INPUT_VALUE = 1
-
-
 
 def add_operation(data, args_raw, arg_values, pointer):
     logging.debug("Performing ADD operation")
@@ -51,6 +47,7 @@ def save_operation(data, args_raw, arg_values, pointer):
     res_address = args_raw[-1]
     res[res_address] = value
 
+    logging.debug(f"Saved {value} to location {res_address}")
     # logging.debug("Data after : " + str(res))
     return res, pointer + len(args_raw) + 1
 
@@ -59,12 +56,65 @@ def print_operation(data, args_raw, arg_values, pointer):
     logging.debug("Performing PRINT operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
 
-    res_address = args_raw[-1]
-    print("INTCODE COMPUTER OUTPUT: ", data[res_address])
+    print("INTCODE COMPUTER OUTPUT: ", arg_values[0])
     return data, pointer + len(args_raw) + 1
+
+def op_jump_true(data, args_raw, arg_values, pointer):
+    logging.debug("Performing JUMP-IF-TRUE operation")
+    data = data.copy()
+
+    if arg_values[0] != 0:
+        pointer_next = arg_values[1]
+        logging.debug("Condition fulfilled, pointer jumping to: {pointer_next}")
+    else:
+        pointer_next = pointer + len(args_raw) + 1
+        logging.debug("Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
+
+    return data, pointer_next
+
+
+def op_jump_false(data, args_raw, arg_values, pointer):
+    logging.debug("Performing JUMP-IF-FALSE operation")
+    data = data.copy()
+
+    if arg_values[0] == 0:
+        pointer_next = arg_values[1]
+        logging.debug("Condition fulfilled, pointer jumping to: {pointer_next}")
+    else:
+        pointer_next = pointer + len(args_raw) + 1
+        logging.debug("Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
+
+    return data, pointer_next
+
+
+def op_less_than(data, args_raw, arg_values, pointer):
+    logging.debug("Performing OP-LESS-THAN operation")
+    data = data.copy()
+
+    if arg_values[0] < arg_values[1]:
+        data[args_raw[2]] = 1
+    else:
+        data[args_raw[2]] = 0
+
+    return data, pointer + len(args_raw) + 1
+
+
+def op_equals(data, args_raw, arg_values, pointer):
+    logging.debug("Performing OP-EQUALS operation")
+    data = data.copy()
+
+    if arg_values[0] == arg_values[1]:
+        data[args_raw[2]] = 1
+    else:
+        data[args_raw[2]] = 0
+
+    return data, pointer + len(args_raw) + 1
+
+
 
 def get_arg_values(data, args_raw, arg_modes):
     l = []
+    logging.debug("Getting parameter values...")
     for i in range(len(args_raw)):
         try:
             mode = int(arg_modes[i])
@@ -72,10 +122,10 @@ def get_arg_values(data, args_raw, arg_modes):
             mode = 0
         
         if mode == 0:
-            logging.debug(f"Parameter {i} mode: POSITION")
+            logging.debug(f"Parameter {i+1} mode: POSITION")
             value = data[args_raw[i]]
         elif mode == 1:
-            logging.debug(f"Parameter {i} mode: IMMEDIATE")
+            logging.debug(f"Parameter {i+1} mode: IMMEDIATE")
             value = args_raw[i]
 
         l.append(value)
@@ -84,21 +134,27 @@ def get_arg_values(data, args_raw, arg_modes):
 
 
 def parse_instruction(data, pointer):
-    logging.debug("Parsing instruction at address: " + str(pointer))
+    logging.debug(f"Parsing instruction at address: {pointer}")
+    logging.debug(f"Data at this section looks like: {data[pointer:pointer+4]}")
+    logging.debug(f"Instruction is: {data[pointer]}")
 
     op_codes = {
         1: {'func': add_operation, 'n_args': 3},
         2: {'func': mul_operation, 'n_args': 3},
         3: {'func': save_operation, 'n_args': 1},
-        4: {'func': print_operation, 'n_args': 1}
+        4: {'func': print_operation, 'n_args': 1},
+        5: {'func': op_jump_true, 'n_args': 2},
+        6: {'func': op_jump_false, 'n_args': 2},
+        7: {'func': op_less_than, 'n_args': 3},
+        8: {'func': op_equals, 'n_args': 3},
     }
 
     try:
         op_int = data[pointer]
         op_code = int(str(op_int)[-2:])
 
-        func = op_codes.get(op_code)['func']
-        n_args = op_codes.get(op_code)['n_args']
+        func = op_codes[op_code]['func']
+        n_args = op_codes[op_code]['n_args']
 
         args_raw = data[pointer + 1: pointer + 1 + n_args]
         arg_modes = str(op_int)[:-2][::-1]
@@ -127,11 +183,15 @@ def run_program(program, noun=None, verb=None, failsafe=1000):
 
         try:
             func, args_raw, arg_locs = parse_instruction(mem, pointer)
+        except:
+            raise RuntimeError(f"Failed to parse instruction at {pointer}")
+
+        try:
             mem, pointer = func(mem, args_raw, arg_locs, pointer)
         except:
-            logging.error("Program failed with params {} {}".format(verb, noun))
-            return None
+            raise RuntimeError(f"Failed to execute instruction at {pointer}")         
 
+        i += 1
         if i > failsafe:
             raise RuntimeError(f"Number of iterations exceeded failsafe ({failsafe})")
     
@@ -140,7 +200,7 @@ def run_program(program, noun=None, verb=None, failsafe=1000):
 
 def find_arguments(program, desired_value):
     logging.info(f"Finding correct parameter values to get {desired_value}")
-    logging.getLogger().setLevel("INFO")
+    logging.getLogger().setLevel("DEBUG")
     LOW, HIGH = 0, 99
     FAILSAFE = 100
 
@@ -159,13 +219,9 @@ if __name__ == "__main__":
     program = [int(i) for i in raw_in[0].split(',')]
 
     # Part 1
-    run_program(program)
+    INPUT_VALUE = 1
+    run_program(program) # Should be 9219874
 
-    assert run_program([1,0,0,0,99])[1] == [2,0,0,0,99]
-    assert run_program([2,3,0,3,99])[1] == [2,3,0,6,99]
-    assert run_program([2,4,4,5,99,0])[1] == [2,4,4,5,99,9801]
-    assert run_program([1,1,1,4,99,5,6,0,99])[1] == [30,1,1,4,2,5,6,0,99]
-    assert run_program([1,9,10,3,2,3,11,0,99,30,40,50])[1] == [3500,9,10,70,2,3,11,0,99,30,40,50]
-
-
-    run_program([3,0,99])
+    # Part 2
+    INPUT_VALUE = 5
+    run_program(program) # Should be 5893654
