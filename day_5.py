@@ -3,6 +3,7 @@ import logging
 
 from common import read_input
 
+logging.basicConfig(format='%(levelname)s %(message)s')
 
 
 def bump_pointer(pointer, args):
@@ -83,10 +84,10 @@ def op_jump_true(mem, args_raw, args, pointer):
 
     if args[0] != 0:
         pointer_next = args[1]
-        logging.debug("Condition fulfilled, pointer jumping to: {pointer_next}")
+        logging.debug(f"Condition fulfilled, pointer jumping to: {pointer_next}")
     else:
         pointer_next = bump_pointer(pointer, args)
-        logging.debug("Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
+        logging.debug(f"Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
 
     return mem, pointer_next
 
@@ -99,17 +100,17 @@ def op_jump_false(mem, args_raw, args, pointer):
 
     if args[0] == 0:
         pointer_next = args[1]
-        logging.debug("Condition fulfilled, pointer jumping to: {pointer_next}")
+        logging.debug(f"Condition fulfilled, pointer jumping to: {pointer_next}")
     else:
         pointer_next = pointer_next = bump_pointer(pointer, args)
-        logging.debug("Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
+        logging.debug(f"Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
 
     return mem, pointer_next
 
 
 def op_less_than(mem, args_raw, args, pointer):
     logging.debug("Performing OP-LESS-THAN operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))  
+    logging.debug(f"Raw args: {args_raw}, arg values: {args}")  
 
     mem = mem.copy()
 
@@ -124,7 +125,7 @@ def op_less_than(mem, args_raw, args, pointer):
 
 def op_equals(mem, args_raw, args, pointer):
     logging.debug("Performing OP-EQUALS operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))  
+    logging.debug(f"Raw args: {args_raw}, arg values: {args}")  
 
     mem = mem.copy()
 
@@ -197,7 +198,7 @@ def run_program(program, noun=None, verb=None, failsafe=1000):
 
     i = 0
     while mem[pointer] != 99:
-        logging.debug("-------------------------------------------------")
+        logging.debug("--------------------------------------------------------------------")
         logging.debug("Running program, iteration: " + str(i))
         logging.debug("Pointer at: " + str(pointer))
 
