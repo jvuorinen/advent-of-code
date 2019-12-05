@@ -6,61 +6,69 @@ from common import read_input
 logging.getLogger().setLevel('DEBUG')
 
 
-def add_operation(data, args_raw, arg_values, pointer):
+def op_add(data, args_raw, arg_values, pointer):
     logging.debug("Performing ADD operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
     # logging.debug("Data before: " + str(data))
 
-    res = data.copy()
+    data = data.copy()
     a, b = arg_values[0], arg_values[1]
     result = a + b
-    res_address = args_raw[-1]
-    res[res_address] = result
 
-    logging.debug(f"Calculation result: {a} + {b} = {result}, storing to address {res_address}")
+    result_address = args_raw[-1]
+    data[result_address] = result
+
+    logging.debug(f"Calculation result: {a} + {b} = {result}, storing to address {result_address}")
     # logging.debug("Data after : " + str(res))
-    return res, pointer + len(args_raw) + 1
+    return data, pointer + len(args_raw) + 1
 
-def mul_operation(data, args_raw, arg_values, pointer):
+
+def op_multiply(data, args_raw, arg_values, pointer):
     logging.debug("Performing MUL operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
     # logging.debug("Data before: " + str(data))
     
-    res = data.copy()
+    data = data.copy()
     a, b = arg_values[0], arg_values[1]
     result = a * b
-    res_address = args_raw[-1]
-    res[res_address] = result
 
-    logging.debug(f"Calculation result: {a} * {b} = {result}, storing to address {res_address}")
+    result_address = args_raw[-1]
+    data[result_address] = result
+
+    logging.debug(f"Calculation result: {a} * {b} = {result}, storing to address {result_address}")
     # logging.debug("Data after : " + str(res))
-    return res, pointer + len(args_raw) + 1
+    return data, pointer + len(args_raw) + 1
 
-def save_operation(data, args_raw, arg_values, pointer):
+
+def op_save(data, args_raw, arg_values, pointer):
     logging.debug("Performing SAV operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
     # logging.debug("Data before: " + str(data))
-    
+
+    data = data.copy()
+
     value = INPUT_VALUE #TODO Change to actual input
+    
+    result_address = args_raw[-1]
+    data[result_address] = value
 
-    res = data.copy()
-    res_address = args_raw[-1]
-    res[res_address] = value
-
-    logging.debug(f"Saved {value} to location {res_address}")
+    logging.debug(f"Saved {value} to location {result_address}")
     # logging.debug("Data after : " + str(res))
-    return res, pointer + len(args_raw) + 1
+    return data, pointer + len(args_raw) + 1
 
 
-def print_operation(data, args_raw, arg_values, pointer):
+def op_print(data, args_raw, arg_values, pointer):
     logging.debug("Performing PRINT operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
 
     print("INTCODE COMPUTER OUTPUT: ", arg_values[0])
     return data, pointer + len(args_raw) + 1
 
+
 def op_jump_true(data, args_raw, arg_values, pointer):
     logging.debug("Performing JUMP-IF-TRUE operation")
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
+
     data = data.copy()
 
     if arg_values[0] != 0:
@@ -75,6 +83,8 @@ def op_jump_true(data, args_raw, arg_values, pointer):
 
 def op_jump_false(data, args_raw, arg_values, pointer):
     logging.debug("Performing JUMP-IF-FALSE operation")
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
+
     data = data.copy()
 
     if arg_values[0] == 0:
@@ -89,6 +99,8 @@ def op_jump_false(data, args_raw, arg_values, pointer):
 
 def op_less_than(data, args_raw, arg_values, pointer):
     logging.debug("Performing OP-LESS-THAN operation")
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
+
     data = data.copy()
 
     if arg_values[0] < arg_values[1]:
@@ -101,6 +113,8 @@ def op_less_than(data, args_raw, arg_values, pointer):
 
 def op_equals(data, args_raw, arg_values, pointer):
     logging.debug("Performing OP-EQUALS operation")
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
+
     data = data.copy()
 
     if arg_values[0] == arg_values[1]:
@@ -109,7 +123,6 @@ def op_equals(data, args_raw, arg_values, pointer):
         data[args_raw[2]] = 0
 
     return data, pointer + len(args_raw) + 1
-
 
 
 def get_arg_values(data, args_raw, arg_modes):
@@ -132,17 +145,16 @@ def get_arg_values(data, args_raw, arg_modes):
     return l
 
 
-
 def parse_instruction(data, pointer):
     logging.debug(f"Parsing instruction at address: {pointer}")
     logging.debug(f"Data at this section looks like: {data[pointer:pointer+4]}")
     logging.debug(f"Instruction is: {data[pointer]}")
 
     op_codes = {
-        1: {'func': add_operation, 'n_args': 3},
-        2: {'func': mul_operation, 'n_args': 3},
-        3: {'func': save_operation, 'n_args': 1},
-        4: {'func': print_operation, 'n_args': 1},
+        1: {'func': op_add, 'n_args': 3},
+        2: {'func': op_multiply, 'n_args': 3},
+        3: {'func': op_save, 'n_args': 1},
+        4: {'func': op_print, 'n_args': 1},
         5: {'func': op_jump_true, 'n_args': 2},
         6: {'func': op_jump_false, 'n_args': 2},
         7: {'func': op_less_than, 'n_args': 3},
@@ -198,20 +210,6 @@ def run_program(program, noun=None, verb=None, failsafe=1000):
     return mem[0], mem
 
 
-def find_arguments(program, desired_value):
-    logging.info(f"Finding correct parameter values to get {desired_value}")
-    logging.getLogger().setLevel("DEBUG")
-    LOW, HIGH = 0, 99
-    FAILSAFE = 100
-
-    results = {
-        run_program(program, n, v, FAILSAFE)[0]: (n, v)
-        for n in range(LOW, HIGH+1) 
-        for v in range(LOW, HIGH+1)}
-
-    return results.get(desired_value, "Desired result not found")
-
-
 if __name__ == "__main__":
     logging.getLogger().setLevel("INFO")
 
@@ -220,8 +218,8 @@ if __name__ == "__main__":
 
     # Part 1
     INPUT_VALUE = 1
-    run_program(program) # Should be 9219874
+    _ = run_program(program) # Should be 9219874
 
     # Part 2
     INPUT_VALUE = 5
-    run_program(program) # Should be 5893654
+    _ = run_program(program) # Should be 5893654
