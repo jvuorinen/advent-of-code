@@ -6,70 +6,70 @@ from common import read_input
 logging.getLogger().setLevel('DEBUG')
 
 
-def op_add(data, args_raw, arg_values, pointer):
+def op_add(mem, args_raw, arg_values, pointer):
     logging.debug("Performing ADD operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
-    # logging.debug("Data before: " + str(data))
+    # logging.debug("mem before: " + str(mem))
 
-    data = data.copy()
+    mem = mem.copy()
     a, b = arg_values[0], arg_values[1]
     result = a + b
 
     result_address = args_raw[-1]
-    data[result_address] = result
+    mem[result_address] = result
 
     logging.debug(f"Calculation result: {a} + {b} = {result}, storing to address {result_address}")
-    # logging.debug("Data after : " + str(res))
-    return data, pointer + len(args_raw) + 1
+    # logging.debug("mem after : " + str(res))
+    return mem, pointer + len(args_raw) + 1
 
 
-def op_multiply(data, args_raw, arg_values, pointer):
+def op_multiply(mem, args_raw, arg_values, pointer):
     logging.debug("Performing MUL operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
-    # logging.debug("Data before: " + str(data))
+    # logging.debug("mem before: " + str(mem))
     
-    data = data.copy()
+    mem = mem.copy()
     a, b = arg_values[0], arg_values[1]
     result = a * b
 
     result_address = args_raw[-1]
-    data[result_address] = result
+    mem[result_address] = result
 
     logging.debug(f"Calculation result: {a} * {b} = {result}, storing to address {result_address}")
-    # logging.debug("Data after : " + str(res))
-    return data, pointer + len(args_raw) + 1
+    # logging.debug("mem after : " + str(res))
+    return mem, pointer + len(args_raw) + 1
 
 
-def op_save(data, args_raw, arg_values, pointer):
+def op_save(mem, args_raw, arg_values, pointer):
     logging.debug("Performing SAV operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
-    # logging.debug("Data before: " + str(data))
+    # logging.debug("mem before: " + str(mem))
 
-    data = data.copy()
+    mem = mem.copy()
 
     value = INPUT_VALUE #TODO Change to actual input
     
     result_address = args_raw[-1]
-    data[result_address] = value
+    mem[result_address] = value
 
     logging.debug(f"Saved {value} to location {result_address}")
-    # logging.debug("Data after : " + str(res))
-    return data, pointer + len(args_raw) + 1
+    # logging.debug("mem after : " + str(res))
+    return mem, pointer + len(args_raw) + 1
 
 
-def op_print(data, args_raw, arg_values, pointer):
+def op_print(mem, args_raw, arg_values, pointer):
     logging.debug("Performing PRINT operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
 
     print("INTCODE COMPUTER OUTPUT: ", arg_values[0])
-    return data, pointer + len(args_raw) + 1
+    return mem, pointer + len(args_raw) + 1
 
 
-def op_jump_true(data, args_raw, arg_values, pointer):
+def op_jump_true(mem, args_raw, arg_values, pointer):
     logging.debug("Performing JUMP-IF-TRUE operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
 
-    data = data.copy()
+    mem = mem.copy()
 
     if arg_values[0] != 0:
         pointer_next = arg_values[1]
@@ -78,14 +78,14 @@ def op_jump_true(data, args_raw, arg_values, pointer):
         pointer_next = pointer + len(args_raw) + 1
         logging.debug("Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
 
-    return data, pointer_next
+    return mem, pointer_next
 
 
-def op_jump_false(data, args_raw, arg_values, pointer):
+def op_jump_false(mem, args_raw, arg_values, pointer):
     logging.debug("Performing JUMP-IF-FALSE operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
 
-    data = data.copy()
+    mem = mem.copy()
 
     if arg_values[0] == 0:
         pointer_next = arg_values[1]
@@ -94,38 +94,38 @@ def op_jump_false(data, args_raw, arg_values, pointer):
         pointer_next = pointer + len(args_raw) + 1
         logging.debug("Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
 
-    return data, pointer_next
+    return mem, pointer_next
 
 
-def op_less_than(data, args_raw, arg_values, pointer):
+def op_less_than(mem, args_raw, arg_values, pointer):
     logging.debug("Performing OP-LESS-THAN operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
 
-    data = data.copy()
+    mem = mem.copy()
 
     if arg_values[0] < arg_values[1]:
-        data[args_raw[2]] = 1
+        mem[args_raw[2]] = 1
     else:
-        data[args_raw[2]] = 0
+        mem[args_raw[2]] = 0
 
-    return data, pointer + len(args_raw) + 1
+    return mem, pointer + len(args_raw) + 1
 
 
-def op_equals(data, args_raw, arg_values, pointer):
+def op_equals(mem, args_raw, arg_values, pointer):
     logging.debug("Performing OP-EQUALS operation")
     logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
 
-    data = data.copy()
+    mem = mem.copy()
 
     if arg_values[0] == arg_values[1]:
-        data[args_raw[2]] = 1
+        mem[args_raw[2]] = 1
     else:
-        data[args_raw[2]] = 0
+        mem[args_raw[2]] = 0
 
-    return data, pointer + len(args_raw) + 1
+    return mem, pointer + len(args_raw) + 1
 
 
-def get_arg_values(data, args_raw, arg_modes):
+def get_arg_values(mem, args_raw, arg_modes):
     l = []
     logging.debug("Getting parameter values...")
     for i in range(len(args_raw)):
@@ -136,7 +136,7 @@ def get_arg_values(data, args_raw, arg_modes):
         
         if mode == 0:
             logging.debug(f"Parameter {i+1} mode: POSITION")
-            value = data[args_raw[i]]
+            value = mem[args_raw[i]]
         elif mode == 1:
             logging.debug(f"Parameter {i+1} mode: IMMEDIATE")
             value = args_raw[i]
@@ -145,10 +145,10 @@ def get_arg_values(data, args_raw, arg_modes):
     return l
 
 
-def parse_instruction(data, pointer):
+def parse_instruction(mem, pointer):
     logging.debug(f"Parsing instruction at address: {pointer}")
-    logging.debug(f"Data at this section looks like: {data[pointer:pointer+4]}")
-    logging.debug(f"Instruction is: {data[pointer]}")
+    logging.debug(f"mem at this section looks like: {mem[pointer:pointer+4]}")
+    logging.debug(f"Instruction is: {mem[pointer]}")
 
     op_codes = {
         1: {'func': op_add, 'n_args': 3},
@@ -162,15 +162,15 @@ def parse_instruction(data, pointer):
     }
 
     try:
-        op_int = data[pointer]
+        op_int = mem[pointer]
         op_code = int(str(op_int)[-2:])
 
         func = op_codes[op_code]['func']
         n_args = op_codes[op_code]['n_args']
 
-        args_raw = data[pointer + 1: pointer + 1 + n_args]
+        args_raw = mem[pointer + 1: pointer + 1 + n_args]
         arg_modes = str(op_int)[:-2][::-1]
-        arg_locs = get_arg_values(data, args_raw, arg_modes)
+        arg_locs = get_arg_values(mem, args_raw, arg_modes)
 
     except TypeError:
         raise RuntimeError(f"Failed to parse instruction at address {pointer}")
