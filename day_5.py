@@ -11,7 +11,7 @@ def bump_pointer(pointer, args):
 
 def op_add(mem, args_raw, args, pointer):
     logging.debug("Performing ADD operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))   
+    logging.debug("Raw args: {}, args: {}".format(args_raw, args))   
     # logging.debug("mem before: " + str(mem))
 
     mem = mem.copy()
@@ -30,7 +30,7 @@ def op_add(mem, args_raw, args, pointer):
 
 def op_multiply(mem, args_raw, args, pointer):
     logging.debug("Performing MUL operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))   
+    logging.debug("Raw args: {}, args: {}".format(args_raw, args))   
     # logging.debug("mem before: " + str(mem))
     
     mem = mem.copy()
@@ -49,7 +49,7 @@ def op_multiply(mem, args_raw, args, pointer):
 
 def op_save(mem, args_raw, args, pointer):
     logging.debug("Performing SAV operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))   
+    logging.debug("Raw args: {}, args: {}".format(args_raw, args))   
     # logging.debug("mem before: " + str(mem))
 
     mem = mem.copy()
@@ -68,7 +68,7 @@ def op_save(mem, args_raw, args, pointer):
 
 def op_print(mem, args_raw, args, pointer):
     logging.debug("Performing PRINT operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))   
+    logging.debug("Raw args: {}, args: {}".format(args_raw, args))   
 
     print("INTCODE COMPUTER OUTPUT: ", args[0])
 
@@ -78,7 +78,7 @@ def op_print(mem, args_raw, args, pointer):
 
 def op_jump_true(mem, args_raw, args, pointer):
     logging.debug("Performing JUMP-IF-TRUE operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))  
+    logging.debug("Raw args: {}, args: {}".format(args_raw, args))  
 
     mem = mem.copy()
 
@@ -94,7 +94,7 @@ def op_jump_true(mem, args_raw, args, pointer):
 
 def op_jump_false(mem, args_raw, args, pointer):
     logging.debug("Performing JUMP-IF-FALSE operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))  
+    logging.debug("Raw args: {}, args: {}".format(args_raw, args))  
 
     mem = mem.copy()
 
@@ -110,7 +110,7 @@ def op_jump_false(mem, args_raw, args, pointer):
 
 def op_less_than(mem, args_raw, args, pointer):
     logging.debug("Performing OP-LESS-THAN operation")
-    logging.debug(f"Raw args: {args_raw}, arg values: {args}")  
+    logging.debug(f"Raw args: {args_raw}, args: {args}")  
 
     mem = mem.copy()
 
@@ -125,7 +125,7 @@ def op_less_than(mem, args_raw, args, pointer):
 
 def op_equals(mem, args_raw, args, pointer):
     logging.debug("Performing OP-EQUALS operation")
-    logging.debug(f"Raw args: {args_raw}, arg values: {args}")  
+    logging.debug(f"Raw args: {args_raw}, args: {args}")  
 
     mem = mem.copy()
 
