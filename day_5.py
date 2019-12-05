@@ -3,129 +3,141 @@ import logging
 
 from common import read_input
 
-logging.getLogger().setLevel('DEBUG')
 
 
-def op_add(mem, args_raw, arg_values, pointer):
+def bump_pointer(pointer, args):
+    return pointer + len(args) + 1  
+
+def op_add(mem, args_raw, args, pointer):
     logging.debug("Performing ADD operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))   
     # logging.debug("mem before: " + str(mem))
 
     mem = mem.copy()
-    a, b = arg_values[0], arg_values[1]
+    a, b = args[0], args[1]
     result = a + b
 
-    result_address = args_raw[-1]
-    mem[result_address] = result
+    save_address = args_raw[-1]
+    mem[save_address] = result
 
-    logging.debug(f"Calculation result: {a} + {b} = {result}, storing to address {result_address}")
+    logging.debug(f"Calculation result: {a} + {b} = {result}, storing to address {save_address}")
     # logging.debug("mem after : " + str(res))
-    return mem, pointer + len(args_raw) + 1
+
+    pointer_next = bump_pointer(pointer, args)
+    return mem, pointer_next
 
 
-def op_multiply(mem, args_raw, arg_values, pointer):
+def op_multiply(mem, args_raw, args, pointer):
     logging.debug("Performing MUL operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))   
     # logging.debug("mem before: " + str(mem))
     
     mem = mem.copy()
-    a, b = arg_values[0], arg_values[1]
+    a, b = args[0], args[1]
     result = a * b
 
-    result_address = args_raw[-1]
-    mem[result_address] = result
+    save_address = args_raw[-1]
+    mem[save_address] = result
 
-    logging.debug(f"Calculation result: {a} * {b} = {result}, storing to address {result_address}")
+    logging.debug(f"Calculation result: {a} * {b} = {result}, storing to address {save_address}")
     # logging.debug("mem after : " + str(res))
-    return mem, pointer + len(args_raw) + 1
+
+    pointer_next = bump_pointer(pointer, args)  
+    return mem, pointer_next
 
 
-def op_save(mem, args_raw, arg_values, pointer):
+def op_save(mem, args_raw, args, pointer):
     logging.debug("Performing SAV operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))   
     # logging.debug("mem before: " + str(mem))
 
     mem = mem.copy()
 
     value = INPUT_VALUE #TODO Change to actual input
     
-    result_address = args_raw[-1]
-    mem[result_address] = value
+    save_address = args_raw[-1]
+    mem[save_address] = value
 
-    logging.debug(f"Saved {value} to location {result_address}")
+    logging.debug(f"Saved {value} to location {save_address}")
     # logging.debug("mem after : " + str(res))
-    return mem, pointer + len(args_raw) + 1
+
+    pointer_next = bump_pointer(pointer, args)
+    return mem, pointer_next
 
 
-def op_print(mem, args_raw, arg_values, pointer):
+def op_print(mem, args_raw, args, pointer):
     logging.debug("Performing PRINT operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))   
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))   
 
-    print("INTCODE COMPUTER OUTPUT: ", arg_values[0])
-    return mem, pointer + len(args_raw) + 1
+    print("INTCODE COMPUTER OUTPUT: ", args[0])
+
+    pointer_next = bump_pointer(pointer, args)
+    return mem, pointer_next
 
 
-def op_jump_true(mem, args_raw, arg_values, pointer):
+def op_jump_true(mem, args_raw, args, pointer):
     logging.debug("Performing JUMP-IF-TRUE operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))  
 
     mem = mem.copy()
 
-    if arg_values[0] != 0:
-        pointer_next = arg_values[1]
+    if args[0] != 0:
+        pointer_next = args[1]
         logging.debug("Condition fulfilled, pointer jumping to: {pointer_next}")
     else:
-        pointer_next = pointer + len(args_raw) + 1
+        pointer_next = bump_pointer(pointer, args)
         logging.debug("Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
 
     return mem, pointer_next
 
 
-def op_jump_false(mem, args_raw, arg_values, pointer):
+def op_jump_false(mem, args_raw, args, pointer):
     logging.debug("Performing JUMP-IF-FALSE operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))  
 
     mem = mem.copy()
 
-    if arg_values[0] == 0:
-        pointer_next = arg_values[1]
+    if args[0] == 0:
+        pointer_next = args[1]
         logging.debug("Condition fulfilled, pointer jumping to: {pointer_next}")
     else:
-        pointer_next = pointer + len(args_raw) + 1
+        pointer_next = pointer_next = bump_pointer(pointer, args)
         logging.debug("Condition not fulfilled, pointer incrementing normally to: {pointer_next}")
 
     return mem, pointer_next
 
 
-def op_less_than(mem, args_raw, arg_values, pointer):
+def op_less_than(mem, args_raw, args, pointer):
     logging.debug("Performing OP-LESS-THAN operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))  
 
     mem = mem.copy()
 
-    if arg_values[0] < arg_values[1]:
+    if args[0] < args[1]:
         mem[args_raw[2]] = 1
     else:
         mem[args_raw[2]] = 0
 
-    return mem, pointer + len(args_raw) + 1
+    pointer_next = bump_pointer(pointer, args)
+    return mem, pointer_next
 
 
-def op_equals(mem, args_raw, arg_values, pointer):
+def op_equals(mem, args_raw, args, pointer):
     logging.debug("Performing OP-EQUALS operation")
-    logging.debug("Raw args: {}, arg values: {}".format(args_raw, arg_values))  
+    logging.debug("Raw args: {}, arg values: {}".format(args_raw, args))  
 
     mem = mem.copy()
 
-    if arg_values[0] == arg_values[1]:
+    if args[0] == args[1]:
         mem[args_raw[2]] = 1
     else:
         mem[args_raw[2]] = 0
 
-    return mem, pointer + len(args_raw) + 1
+    pointer_next = bump_pointer(pointer, args)
+    return mem, pointer_next
 
 
-def get_arg_values(mem, args_raw, arg_modes):
+def get_args(mem, args_raw, arg_modes):
     l = []
     logging.debug("Getting parameter values...")
     for i in range(len(args_raw)):
@@ -147,7 +159,6 @@ def get_arg_values(mem, args_raw, arg_modes):
 
 def parse_instruction(mem, pointer):
     logging.debug(f"Parsing instruction at address: {pointer}")
-    logging.debug(f"mem at this section looks like: {mem[pointer:pointer+4]}")
     logging.debug(f"Instruction is: {mem[pointer]}")
 
     op_codes = {
@@ -161,19 +172,15 @@ def parse_instruction(mem, pointer):
         8: {'func': op_equals, 'n_args': 3},
     }
 
-    try:
-        op_int = mem[pointer]
-        op_code = int(str(op_int)[-2:])
+    op_int = mem[pointer]
+    op_code = int(str(op_int)[-2:])
 
-        func = op_codes[op_code]['func']
-        n_args = op_codes[op_code]['n_args']
+    func = op_codes[op_code]['func']
+    n_args = op_codes[op_code]['n_args']
 
-        args_raw = mem[pointer + 1: pointer + 1 + n_args]
-        arg_modes = str(op_int)[:-2][::-1]
-        arg_locs = get_arg_values(mem, args_raw, arg_modes)
-
-    except TypeError:
-        raise RuntimeError(f"Failed to parse instruction at address {pointer}")
+    args_raw = mem[pointer + 1: pointer + 1 + n_args]
+    arg_modes = str(op_int)[:-2][::-1]
+    arg_locs = get_args(mem, args_raw, arg_modes)
 
     return func, args_raw, arg_locs
 
@@ -190,6 +197,7 @@ def run_program(program, noun=None, verb=None, failsafe=1000):
 
     i = 0
     while mem[pointer] != 99:
+        logging.debug("-------------------------------------------------")
         logging.debug("Running program, iteration: " + str(i))
         logging.debug("Pointer at: " + str(pointer))
 
@@ -211,7 +219,7 @@ def run_program(program, noun=None, verb=None, failsafe=1000):
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel("INFO")
+    logging.getLogger().setLevel("DEBUG")
 
     raw_in = read_input('data/day_5.txt')
     program = [int(i) for i in raw_in[0].split(',')]
