@@ -226,9 +226,9 @@ if __name__ == "__main__":
     program = [int(i) for i in raw_in[0].split(',')]
 
     # Part 1
-    INPUT_VALUE = 1
-    _ = run_program(program) # Should be 9219874
+    # INPUT_VALUE = 1
+    # _ = run_program(program) # Should be 9219874
 
     # Part 2
-    INPUT_VALUE = 5
-    _ = run_program(program) # Should be 5893654
+    # INPUT_VALUE = 5
+    # _ = run_program(program) # Should be 5893654

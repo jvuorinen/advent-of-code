@@ -2,7 +2,7 @@ import logging
 
 from common import read_input
 
-logging.getLogger().setLevel('DEBUG')
-
 if __name__ == "__main__":
-    pass
+    logging.getLogger().setLevel("DEBUG")
+
+    raw_in = read_input('data/day_5.txt')
