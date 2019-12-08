@@ -1,5 +1,5 @@
 import logging
-logging.basicConfig(format='%(levelname)s %(messag)s')
+logging.basicConfig(format='%(levelname)s %(message)s')
 
 from common import read_input
 
