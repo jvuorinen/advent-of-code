@@ -255,22 +255,6 @@ def solve(phase_possibilities):
 
     return max(all_outputs)
 
-# def find_best_signal(program):
-#     phase_combos = permutations([0,1,2,3,4])
-
-#     all_outputs = []
-#     for phase_order in phase_combos:
-#         logging.info(f"Running phase combo {phase_order}")
-#         inputs = [0]
-#         for phase in phase_order:
-#             inputs.append(phase)
-#             output, _ = run_program(program, inputs)
-#             inputs.insert(0, output[0])
-#             all_outputs += output
-
-#     return max(all_outputs)
-
-
 if __name__ == "__main__":
     logging.getLogger().setLevel("WARNING")
 
