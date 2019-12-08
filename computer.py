@@ -190,16 +190,30 @@ def parse_instruction(mem, pointer):
 
 
 class Computer:
-    def __init__(self, program, failsafe = 1000):
-        self.state = "NOT STARTED"
-        self.load(program)
+    def __init__(self, program=None, failsafe = 1000):
+        self.state = "IDLE, NO PROGRAM LOADED"
         self.failsafe = failsafe
+        self.pointer = None
+        self.input_stack = None
+        self.outputs = None
+
+        if program:
+            self.load(program)
 
     def __repr__(self):
         return f"Intcode Computer\nstate: {self.state}\npointer at: {self.pointer}\ninput stack: {self.input_stack}\noutputs: {self.outputs}"
 
-    def load(self, program):
+    def load(self, program, noun=None, verb=None):
+        self.state = "IDLE, NOT STARTED"
         self._program = program.copy()
+
+        if noun:
+            logging.debug(f"Setting noun to {noun}")
+            self._program[1] = noun
+        if verb:
+            logging.debug(f"Setting verb to {verb}")
+            self._program[2] = verb
+
         logging.info("Program loaded")
         self.reset()
 

@@ -127,3 +127,4 @@ def test_day5_7():
         computer.add_input(i)
         computer.run()
         assert computer.outputs[-1] == out
+
