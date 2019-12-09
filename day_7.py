@@ -41,7 +41,7 @@ def solve(program, phase_possibilities):
                 # print(f"Amp {i} running on signal {signal}")
                 signal = amps[i].amplify(signal)
 
-            if amps[4].computer.state == "FINISHED":
+            if amps[4].computer.status == "FINISHED":
                 all_outputs.append(signal)
                 break
 
