@@ -2,7 +2,7 @@ from typing import List
 import logging
 from itertools import permutations
 from dataclasses import dataclass
-from copy import deepcopy
+# from copy import deepcopy
 
 from common import read_input
 
@@ -18,6 +18,15 @@ class ComputerState:
     outputs: List[int]
     relative_base: int
 
+    def get_copy(self):
+        return ComputerState(
+            mem=self.mem.copy(),
+            pointer=self.pointer,
+            input_stack=self.input_stack.copy(),
+            outputs=self.outputs.copy(),
+            relative_base=self.relative_base
+        )
+
 
 def bump_pointer(pointer, args):
     return pointer + len(args) + 1  
@@ -25,7 +34,7 @@ def bump_pointer(pointer, args):
 def op_add(state, args):
     logging.debug(f"Performing ADD operation, args: {args}")   
 
-    state = deepcopy(state)
+    state = state.get_copy()
     
     a, b = args[0], args[1]
     result = a + b
@@ -43,7 +52,7 @@ def op_add(state, args):
 def op_multiply(state, args):
     logging.debug(f"Performing MULTIPLY operation, args: {args}")   
 
-    state = deepcopy(state)
+    state = state.get_copy()
 
     a, b = args[0], args[1]
     result = a * b
@@ -60,7 +69,7 @@ def op_multiply(state, args):
 def op_save(state, args):
     logging.debug(f"Performing SAVE operation, args: {args}")   
 
-    state = deepcopy(state)
+    state = state.get_copy()
 
     value = state.input_stack.pop()
     
@@ -76,7 +85,7 @@ def op_save(state, args):
 def op_print(state, args):
     logging.debug(f"Performing PRINT operation, args: {args}")  
 
-    state = deepcopy(state)
+    state = state.get_copy()
 
     stuff = args[0]
     logging.info(f"INTCODE COMPUTER OUTPUT: {stuff}")
@@ -89,7 +98,7 @@ def op_print(state, args):
 def op_jump_true(state, args):
     logging.debug(f"Performing JUMP-IF-TRUE operation, args: {args}")  
 
-    state = deepcopy(state)
+    state = state.get_copy()
 
     if args[0] != 0:
         state.pointer = args[1]
@@ -104,6 +113,8 @@ def op_jump_true(state, args):
 def op_jump_false(state, args):
     logging.debug(f"Performing JUMP-IF-FALSE operation, args: {args}")  
 
+    state = state.get_copy()
+
     if args[0] == 0:
         state.pointer = args[1]
         logging.debug(f"Condition fulfilled, pointer jumping to: {state.pointer}")
@@ -117,7 +128,7 @@ def op_jump_false(state, args):
 def op_less_than(state, args):
     logging.debug(f"Performing OP-LESS-THAN operation, args: {args}")  
 
-    state = deepcopy(state)
+    state = state.get_copy()
 
     if args[0] < args[1]:
         state.mem[args[-1]] = 1 
@@ -131,7 +142,7 @@ def op_less_than(state, args):
 def op_equals(state, args):
     logging.debug(f"Performing OP-EQUALS operation, args: {args}")
 
-    state = deepcopy(state)
+    state = state.get_copy()
 
     if args[0] == args[1]:
         state.mem[args[-1]] = 1 
@@ -145,9 +156,10 @@ def op_equals(state, args):
 def op_adjust_relative_base(state, args):
     logging.debug(f"Performing ADJUST RELATIVE BASE operation, args: {args}")  
 
-    state = deepcopy(state)
+    state = state.get_copy()
 
     relative_base_new = state.relative_base + args[0]
+    state.relative_base = relative_base_new
     logging.debug(f"Changed relative base from: {state.relative_base} to {relative_base_new}")  
 
     state.pointer = bump_pointer(state.pointer, args)
@@ -307,9 +319,9 @@ if __name__ == "__main__":
     raw_in = read_input('data/day_9.txt')
     program = [int(i) for i in raw_in[0].split(',')]
 
-    program = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
+    # program = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
 
     c = Computer()
     c.load(program)
-    c.add_input(1)
+    c.add_input(2)
     c.run()
