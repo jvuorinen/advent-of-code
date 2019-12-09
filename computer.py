@@ -63,8 +63,9 @@ def op_save(mem, args, pointer, inputs, outputs, relative_base):
 def op_print(mem, args, pointer, inputs, outputs, relative_base):
     logging.debug(f"Performing PRINT operation, args: {args}")  
 
-    logging.info(f"INTCODE COMPUTER OUTPUT: {args[0]}")
-    outputs.append(args[0])
+    stuff = args[0]
+    logging.info(f"INTCODE COMPUTER OUTPUT: {stuff}")
+    outputs.append(stuff)
 
     pointer_next = bump_pointer(pointer, args)
     return mem, pointer_next, relative_base
@@ -139,9 +140,11 @@ def op_adjust_relative_base(mem, args, pointer, inputs, outputs, relative_base):
     pointer_next = bump_pointer(pointer, args)
     return mem, pointer_next, relative_base_new
 
+
 def get_args(mem, args_raw, arg_modes, pointer, relative_base):
     l = []
     logging.debug("Getting parameter values...")
+ 
     for i, mode in enumerate(arg_modes):
         if mode == 0:
             logging.debug(f"Parameter {i+1} mode: POSITION")
@@ -150,11 +153,14 @@ def get_args(mem, args_raw, arg_modes, pointer, relative_base):
             logging.debug(f"Parameter {i+1} mode: IMMEDIATE")
             value = args_raw[i]
         elif mode == 2:
-            logging.debug(f"Parameter {i+1} mode: RELATIVE")
+            logging.debug(f"Parameter {i+1} mode: RELATIVE (using {relative_base} as relative base)")
             value = mem[relative_base + args_raw[i]]
+            # value = relative_base + args_raw[i]
         else:
             raise ValueError(f"Invalid parameter mode: {mode}")
         l.append(value)
+    
+    logging.debug(f"Arguments parsed - raw args: {args_raw}, final_args: {l}")   
     return l
 
 
@@ -278,12 +284,12 @@ class Computer:
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel('DEBUG')
+    logging.getLogger().setLevel('INFO')
 
     raw_in = read_input('data/day_9.txt')
     program = [int(i) for i in raw_in[0].split(',')]
 
-    # program = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
+    program = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
 
     c = Computer()
     c.load(program)
