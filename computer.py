@@ -10,16 +10,14 @@ logging.basicConfig(format='%(levelname)s %(message)s')
 def bump_pointer(pointer, args):
     return pointer + len(args) + 1  
 
-def op_add(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing ADD operation")
-    logging.debug("Raw args: {}, args: {}".format(args_raw, args))   
-    # logging.debug("mem before: " + str(mem))
+def op_add(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing ADD operation, args: {args}")   
 
     mem = mem.copy()
     a, b = args[0], args[1]
     result = a + b
 
-    save_address = args_raw[-1] #TODO fix this
+    save_address = args[-1]
     mem[save_address] = result
 
     logging.debug(f"Calculation result: {a} + {b} = {result}, storing to address {save_address}")
@@ -29,47 +27,41 @@ def op_add(mem, args_raw, args, pointer, inputs, outputs, relative_base):
     return mem, pointer_next, relative_base
 
 
-def op_multiply(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing MUL operation")
-    logging.debug("Raw args: {}, args: {}".format(args_raw, args))   
-    # logging.debug("mem before: " + str(mem))
-    
+def op_multiply(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing MULTIPLY operation, args: {args}")   
+
     mem = mem.copy()
+
     a, b = args[0], args[1]
     result = a * b
 
-    save_address = args_raw[-1] #TODO fix this
+    save_address = args[-1] 
     mem[save_address] = result
 
     logging.debug(f"Calculation result: {a} * {b} = {result}, storing to address {save_address}")
-    # logging.debug("mem after : " + str(res))
 
     pointer_next = bump_pointer(pointer, args)  
     return mem, pointer_next, relative_base
 
 
-def op_save(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing SAV operation")
-    logging.debug("Raw args: {}, args: {}".format(args_raw, args))   
-    # logging.debug("mem before: " + str(mem))
+def op_save(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing SAVE operation, args: {args}")   
 
     mem = mem.copy()
 
     value = inputs.pop()
     
-    save_address = args_raw[-1] #TODO fix this
+    save_address = args[-1]
     mem[save_address] = value
 
     logging.debug(f"Saved {value} to location {save_address}")
-    # logging.debug("mem after : " + str(res))
 
     pointer_next = bump_pointer(pointer, args)
     return mem, pointer_next, relative_base
 
 
-def op_print(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing PRINT operation")
-    logging.debug("Raw args: {}, args: {}".format(args_raw, args))   
+def op_print(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing PRINT operation, args: {args}")  
 
     logging.info(f"INTCODE COMPUTER OUTPUT: {args[0]}")
     outputs.append(args[0])
@@ -78,9 +70,8 @@ def op_print(mem, args_raw, args, pointer, inputs, outputs, relative_base):
     return mem, pointer_next, relative_base
 
 
-def op_jump_true(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing JUMP-IF-TRUE operation")
-    logging.debug("Raw args: {}, args: {}".format(args_raw, args))  
+def op_jump_true(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing JUMP-IF-TRUE operation, args: {args}")  
 
     mem = mem.copy()
 
@@ -94,9 +85,8 @@ def op_jump_true(mem, args_raw, args, pointer, inputs, outputs, relative_base):
     return mem, pointer_next, relative_base
 
 
-def op_jump_false(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing JUMP-IF-FALSE operation")
-    logging.debug("Raw args: {}, args: {}".format(args_raw, args))  
+def op_jump_false(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing JUMP-IF-FALSE operation, args: {args}")  
 
     mem = mem.copy()
 
@@ -110,39 +100,36 @@ def op_jump_false(mem, args_raw, args, pointer, inputs, outputs, relative_base):
     return mem, pointer_next, relative_base
 
 
-def op_less_than(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing OP-LESS-THAN operation")
-    logging.debug(f"Raw args: {args_raw}, args: {args}")  
+def op_less_than(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing OP-LESS-THAN operation, args: {args}")  
 
     mem = mem.copy()
 
     if args[0] < args[1]:
-        mem[args_raw[2]] = 1 #TODO fix this
+        mem[args[-1]] = 1 
     else:
-        mem[args_raw[2]] = 0 #TODO fix this
+        mem[args[-1]] = 0 
 
     pointer_next = bump_pointer(pointer, args)
     return mem, pointer_next, relative_base
 
 
-def op_equals(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing OP-EQUALS operation")
-    logging.debug(f"Raw args: {args_raw}, args: {args}")  
+def op_equals(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing OP-EQUALS operation, args: {args}")
 
     mem = mem.copy()
 
     if args[0] == args[1]:
-        mem[args_raw[2]] = 1 #TODO fix this
+        mem[args[-1]] = 1 
     else:
-        mem[args_raw[2]] = 0 #TODO fix this
+        mem[args[-1]] = 0 
 
     pointer_next = bump_pointer(pointer, args)
     return mem, pointer_next, relative_base
 
 
-def op_adjust_relative_base(mem, args_raw, args, pointer, inputs, outputs, relative_base):
-    logging.debug("Performing ADJUST RELATIVE BASE operation")
-    logging.debug(f"Raw args: {args_raw}, args: {args}")  
+def op_adjust_relative_base(mem, args, pointer, inputs, outputs, relative_base):
+    logging.debug(f"Performing ADJUST RELATIVE BASE operation, args: {args}")  
 
     mem = mem.copy()
 
@@ -155,12 +142,7 @@ def op_adjust_relative_base(mem, args_raw, args, pointer, inputs, outputs, relat
 def get_args(mem, args_raw, arg_modes, pointer, relative_base):
     l = []
     logging.debug("Getting parameter values...")
-    for i in range(len(args_raw)):
-        try:
-            mode = int(arg_modes[i])
-        except IndexError:
-            mode = 0
-        
+    for i, mode in enumerate(arg_modes):
         if mode == 0:
             logging.debug(f"Parameter {i+1} mode: POSITION")
             value = mem[args_raw[i]]
@@ -170,9 +152,16 @@ def get_args(mem, args_raw, arg_modes, pointer, relative_base):
         elif mode == 2:
             logging.debug(f"Parameter {i+1} mode: RELATIVE")
             value = mem[relative_base + args_raw[i]]
-
+        else:
+            raise ValueError(f"Invalid parameter mode: {mode}")
         l.append(value)
     return l
+
+
+def parse_arg_modes(op_int, n_args):
+    parsed = [] + [int(x) for x in list(str(op_int)[:-2][::-1])]
+    implied = (n_args - len(parsed))*[0]
+    return parsed + implied
 
 
 def parse_instruction(mem, pointer, relative_base):
@@ -198,10 +187,15 @@ def parse_instruction(mem, pointer, relative_base):
     n_args = op_codes[op_code]['n_args']
 
     args_raw = mem[pointer + 1: pointer + 1 + n_args]
-    arg_modes = str(op_int)[:-2][::-1]
+    arg_modes = parse_arg_modes(op_int, n_args)
+
     args = get_args(mem, args_raw, arg_modes, pointer, relative_base)
 
-    return func, args_raw, args
+    # Fix the writing problems
+    if (op_code in (1, 2, 3, 7, 8)) and (arg_modes[-1] == 0):
+        args[-1] = args_raw[-1]
+
+    return func, args
 
 
 
@@ -246,12 +240,12 @@ class Computer:
 
     def _step(self):
         try:
-            func, args_raw, arg_locs = parse_instruction(self.mem, self.pointer, self.relative_base)
+            func, args = parse_instruction(self.mem, self.pointer, self.relative_base)
         except:
             raise RuntimeError(f"Failed to parse instruction at {self.pointer}")
 
         try:
-            self.mem, self.pointer, self.relative_base = func(self.mem, args_raw, arg_locs, self.pointer, self.input_stack, self.outputs, self.relative_base)
+            self.mem, self.pointer, self.relative_base = func(self.mem, args, self.pointer, self.input_stack, self.outputs, self.relative_base)
         except:
             raise RuntimeError(f"Failed to execute instruction at {self.pointer}")
 
@@ -284,7 +278,7 @@ class Computer:
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel('INFO')
+    logging.getLogger().setLevel('DEBUG')
 
     raw_in = read_input('data/day_9.txt')
     program = [int(i) for i in raw_in[0].split(',')]
