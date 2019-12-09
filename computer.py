@@ -155,7 +155,6 @@ def get_args(mem, args_raw, arg_modes, pointer, relative_base):
         elif mode == 2:
             logging.debug(f"Parameter {i+1} mode: RELATIVE (using {relative_base} as relative base)")
             value = mem[relative_base + args_raw[i]]
-            # value = relative_base + args_raw[i]
         else:
             raise ValueError(f"Invalid parameter mode: {mode}")
         l.append(value)
@@ -197,9 +196,14 @@ def parse_instruction(mem, pointer, relative_base):
 
     args = get_args(mem, args_raw, arg_modes, pointer, relative_base)
 
-    # Fix the writing problems
+    # This is ugly stuff... Basically have to do this fix 
+    # to make writing work properly
     if (op_code in (1, 2, 3, 7, 8)) and (arg_modes[-1] == 0):
         args[-1] = args_raw[-1]
+
+    if (op_code in (1, 2, 3, 7, 8)) and (arg_modes[-1] == 2):
+        args[-1] = relative_base + args_raw[-1]
+
 
     return func, args
 
@@ -289,7 +293,7 @@ if __name__ == "__main__":
     raw_in = read_input('data/day_9.txt')
     program = [int(i) for i in raw_in[0].split(',')]
 
-    program = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
+    # program = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
 
     c = Computer()
     c.load(program)
