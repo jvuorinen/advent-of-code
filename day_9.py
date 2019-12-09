@@ -18,8 +18,7 @@ if __name__ == "__main__":
     c.add_input(1)
     c.run()
 
-
-    # Part 1
+    # Part 2
     c.reset()
     c.add_input(2)
     c.run()
