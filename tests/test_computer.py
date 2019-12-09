@@ -5,35 +5,35 @@ def test_day2_1():
 
     computer = Computer(program)
     computer.run()
-    assert computer.mem == [2,0,0,0,99]
+    assert computer.mem[:len(program)] == [2,0,0,0,99]
 
 def test_day2_2():
     program = [2,3,0,3,99]
 
     computer = Computer(program)
     computer.run()
-    assert computer.mem == [2,3,0,6,99]
+    assert computer.mem[:len(program)] == [2,3,0,6,99]
 
 def test_day2_3():
     program = [2,4,4,5,99,0]
 
     computer = Computer(program)
     computer.run()
-    assert computer.mem == [2,4,4,5,99,9801]
+    assert computer.mem[:len(program)] == [2,4,4,5,99,9801]
 
 def test_day2_4():
     program = [1,1,1,4,99,5,6,0,99]
 
     computer = Computer(program)
     computer.run()
-    assert computer.mem == [30,1,1,4,2,5,6,0,99]
+    assert computer.mem[:len(program)] == [30,1,1,4,2,5,6,0,99]
 
 def test_day2_5():
     program = [1,9,10,3,2,3,11,0,99,30,40,50]
 
     computer = Computer(program)
     computer.run()
-    assert computer.mem == [3500,9,10,70,2,3,11,0,99,30,40,50]
+    assert computer.mem[:len(program)] == [3500,9,10,70,2,3,11,0,99,30,40,50]
 
 def test_day2_6():
     program = [3,9,8,9,10,9,4,9,99,-1,8]
