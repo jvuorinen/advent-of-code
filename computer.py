@@ -323,5 +323,5 @@ if __name__ == "__main__":
 
     c = Computer()
     c.load(program)
-    c.add_input(2)
-    c.run()
+    c.add_input(1)
+    # c.run()
