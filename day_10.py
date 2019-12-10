@@ -68,7 +68,7 @@ def shoot_asteroids(station, asteroids):
                 print(f"Number {i} asteroid to be vaporized is {a[0]}")
                 i += 1
                 d[k] = v[1:]
-            if i > 250:
+            if i == (len(asteroids)):
                 return
 
 
