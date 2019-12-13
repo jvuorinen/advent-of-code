@@ -28,7 +28,8 @@ def getchar():
 
 class ArcadeMachine:
     def __init__(self, program):
-        self.computer = Computer(program, failsafe = 10_000_000)
+        self.computer = Computer(program, failsafe = 100_000_000, mem_size=10_000)
+        self.score = 0
         # self.computer.run()
 
     def _render(self):
@@ -67,8 +68,8 @@ class ArcadeMachine:
         return score
 
     def play(self):
-        self.score = 0
-        self.computer.reset()
+        # self.score = 0
+
         self.computer.state.mem[0] = 2 # Play without coins
 
         i = 0
@@ -83,6 +84,7 @@ class ArcadeMachine:
                 break
 
             elif user_input == "r":
+                self.computer.reset()
                 self.play()
             
             elif user_input == "z":
@@ -95,8 +97,9 @@ class ArcadeMachine:
                 continue
 
             else:
-                saves.append((self.score, self.computer.state.get_copy()))  
-                saves = saves[-200:]
+                if self.score > 0:
+                    saves.append((self.score, self.computer.state.get_copy()))  
+                    saves = saves[-200:]
                 int_input = {",": -1, ".": 0, "-": 1}.get(user_input, 0)
                 self.computer.add_input(int_input)
                 i+= 1

@@ -238,7 +238,7 @@ def parse_instruction(mem, pointer, relative_base):
 
 
 class Computer:
-    def __init__(self, program=None, failsafe = 1000000, mem_size = 20_000):
+    def __init__(self, program=None, failsafe = 1000000, mem_size = 5_000):
         self.status = "IDLE, NO PROGRAM LOADED"
         self.failsafe = failsafe
         self.mem_size = mem_size
