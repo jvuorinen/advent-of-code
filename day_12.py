@@ -129,4 +129,11 @@ if __name__ == "__main__":
     # print(system)
     # print(system.get_energy())
 
-    system.find_stability_point()
+    # system.find_stability_point()
+
+
+
+
+
+
+

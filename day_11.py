@@ -114,12 +114,12 @@ if __name__ == "__main__":
     program = [int(i) for i in raw_in[0].split(',')]
 
     # Part 1
-    robot = PainterRobot(program)
-    robot.paint_all()
-    robot.map.visualize()
+    # robot = PainterRobot(program)
+    # robot.paint_all()
+    # robot.map.visualize()
 
-    n_painted_at_least_once = len(robot.map.painted)
-    print(f"Step 1 answer: {n_painted_at_least_once}")
+    # n_painted_at_least_once = len(robot.map.painted)
+    # print(f"Step 1 answer: {n_painted_at_least_once}")
 
     # Part 2
     robot = PainterRobot(program)

@@ -32,9 +32,9 @@ def bump_pointer(pointer, args):
     return pointer + len(args) + 1  
 
 def op_add(state, args):
-    logging.debug(f"Performing ADD operation, args: {args}")   
+    # logging.debug(f"Performing ADD operation, args: {args}")   
 
-    state = state.get_copy()
+    # state = state.get_copy()
     
     a, b = args[0], args[1]
     result = a + b
@@ -42,7 +42,7 @@ def op_add(state, args):
     save_address = args[-1]
     state.mem[save_address] = result
 
-    logging.debug(f"Calculation result: {a} + {b} = {result}, storing to address {save_address}")
+    # logging.debug(f"Calculation result: {a} + {b} = {result}, storing to address {save_address}")
     # logging.debug("mem after : " + str(res))
 
     state.pointer = bump_pointer(state.pointer, args)
@@ -50,9 +50,9 @@ def op_add(state, args):
 
 
 def op_multiply(state, args):
-    logging.debug(f"Performing MULTIPLY operation, args: {args}")   
+    # logging.debug(f"Performing MULTIPLY operation, args: {args}")   
 
-    state = state.get_copy()
+    # state = state.get_copy()
 
     a, b = args[0], args[1]
     result = a * b
@@ -60,35 +60,35 @@ def op_multiply(state, args):
     save_address = args[-1] 
     state.mem[save_address] = result
 
-    logging.debug(f"Calculation result: {a} * {b} = {result}, storing to address {save_address}")
+    # logging.debug(f"Calculation result: {a} * {b} = {result}, storing to address {save_address}")
 
     state.pointer = bump_pointer(state.pointer, args)  
     return state
 
 
 def op_save(state, args):
-    logging.debug(f"Performing SAVE operation, args: {args}")   
+    # logging.debug(f"Performing SAVE operation, args: {args}")   
 
-    state = state.get_copy()
+    # state = state.get_copy()
 
     value = state.input_stack.pop()
     
     save_address = args[-1]
     state.mem[save_address] = value
 
-    logging.debug(f"Saved {value} to location {save_address}")
+    # logging.debug(f"Saved {value} to location {save_address}")
 
     state.pointer = bump_pointer(state.pointer, args)
     return state
 
 
 def op_print(state, args):
-    logging.debug(f"Performing PRINT operation, args: {args}")  
+    # logging.debug(f"Performing PRINT operation, args: {args}")  
 
-    state = state.get_copy()
+    # state = state.get_copy()
 
     stuff = args[0]
-    logging.info(f"INTCODE COMPUTER OUTPUT: {stuff}")
+    # logging.debug(f"INTCODE COMPUTER OUTPUT: {stuff}")
     state.outputs += [stuff]
 
     state.pointer = bump_pointer(state.pointer, args)
@@ -96,39 +96,39 @@ def op_print(state, args):
 
 
 def op_jump_true(state, args):
-    logging.debug(f"Performing JUMP-IF-TRUE operation, args: {args}")  
+    # logging.debug(f"Performing JUMP-IF-TRUE operation, args: {args}")  
 
-    state = state.get_copy()
+    # state = state.get_copy()
 
     if args[0] != 0:
         state.pointer = args[1]
-        logging.debug(f"Condition fulfilled, pointer jumping to: {state.pointer}")
+        # logging.debug(f"Condition fulfilled, pointer jumping to: {state.pointer}")
     else:
         state.pointer = bump_pointer(state.pointer, args)
-        logging.debug(f"Condition not fulfilled, pointer incrementing normally to: {state.pointer}")
+        # logging.debug(f"Condition not fulfilled, pointer incrementing normally to: {state.pointer}")
 
     return state
 
 
 def op_jump_false(state, args):
-    logging.debug(f"Performing JUMP-IF-FALSE operation, args: {args}")  
+    # logging.debug(f"Performing JUMP-IF-FALSE operation, args: {args}")  
 
-    state = state.get_copy()
+    # state = state.get_copy()
 
     if args[0] == 0:
         state.pointer = args[1]
-        logging.debug(f"Condition fulfilled, pointer jumping to: {state.pointer}")
+        # logging.debug(f"Condition fulfilled, pointer jumping to: {state.pointer}")
     else:
         state.pointer = bump_pointer(state.pointer, args)
-        logging.debug(f"Condition not fulfilled, pointer incrementing normally to: {state.pointer}")
+        # logging.debug(f"Condition not fulfilled, pointer incrementing normally to: {state.pointer}")
 
     return state
 
 
 def op_less_than(state, args):
-    logging.debug(f"Performing OP-LESS-THAN operation, args: {args}")  
+    # logging.debug(f"Performing OP-LESS-THAN operation, args: {args}")  
 
-    state = state.get_copy()
+    # state = state.get_copy()
 
     if args[0] < args[1]:
         state.mem[args[-1]] = 1 
@@ -140,9 +140,9 @@ def op_less_than(state, args):
 
 
 def op_equals(state, args):
-    logging.debug(f"Performing OP-EQUALS operation, args: {args}")
+    # logging.debug(f"Performing OP-EQUALS operation, args: {args}")
 
-    state = state.get_copy()
+    # state = state.get_copy()
 
     if args[0] == args[1]:
         state.mem[args[-1]] = 1 
@@ -154,37 +154,49 @@ def op_equals(state, args):
 
 
 def op_adjust_relative_base(state, args):
-    logging.debug(f"Performing ADJUST RELATIVE BASE operation, args: {args}")  
+    # logging.debug(f"Performing ADJUST RELATIVE BASE operation, args: {args}")  
 
-    state = state.get_copy()
+    # state = state.get_copy()
 
     relative_base_new = state.relative_base + args[0]
     state.relative_base = relative_base_new
-    logging.debug(f"Changed relative base from: {state.relative_base} to {relative_base_new}")  
+    # logging.debug(f"Changed relative base from: {state.relative_base} to {relative_base_new}")  
 
     state.pointer = bump_pointer(state.pointer, args)
     return state
 
 
-def get_args(mem, args_raw, arg_modes, pointer, relative_base):
+def get_args(mem, args_raw, arg_modes, pointer, relative_base, op_code):
     l = []
-    logging.debug("Getting parameter values...")
- 
+    # logging.debug("Getting parameter values...")
+
     for i, mode in enumerate(arg_modes):
         if mode == 0:
-            logging.debug(f"Parameter {i+1} mode: POSITION")
-            value = mem[args_raw[i]]
+            # logging.debug(f"Parameter {i+1} mode: POSITION")
+
+            # This is ugly stuff... have to do this fix to make writing work properly
+            if (op_code in (1, 2, 3, 7, 8)) and (i == (len(arg_modes) - 1)):
+                value = args_raw[-1]
+            else:
+                value = mem[args_raw[i]]
+
         elif mode == 1:
-            logging.debug(f"Parameter {i+1} mode: IMMEDIATE")
+            # logging.debug(f"Parameter {i+1} mode: IMMEDIATE")
             value = args_raw[i]
         elif mode == 2:
-            logging.debug(f"Parameter {i+1} mode: RELATIVE (using {relative_base} as relative base)")
-            value = mem[relative_base + args_raw[i]]
+            # logging.debug(f"Parameter {i+1} mode: RELATIVE (using {relative_base} as relative base)")
+            
+            # This is ugly stuff... have to do this fix to make writing work properly
+            if (op_code in (1, 2, 3, 7, 8)) and (i == (len(arg_modes) - 1)):
+                value = relative_base + args_raw[-1]
+            else:
+                value = mem[relative_base + args_raw[i]]
+                        
         else:
             raise ValueError(f"Invalid parameter mode: {mode}")
         l.append(value)
     
-    logging.debug(f"Arguments parsed - raw args: {args_raw}, final_args: {l}")   
+    # logging.debug(f"Arguments parsed - raw args: {args_raw}, final_args: {l}")   
     return l
 
 
@@ -195,8 +207,8 @@ def parse_arg_modes(op_int, n_args):
 
 
 def parse_instruction(mem, pointer, relative_base):
-    logging.debug(f"Parsing instruction at address: {pointer}")
-    logging.debug(f"Instruction is: {mem[pointer]}")
+    # logging.debug(f"Parsing instruction at address: {pointer}")
+    # logging.debug(f"Instruction is: {mem[pointer]}")
 
     op_codes = {
         1: {'func': op_add, 'n_args': 3},
@@ -219,25 +231,17 @@ def parse_instruction(mem, pointer, relative_base):
     args_raw = mem[pointer + 1: pointer + 1 + n_args]
     arg_modes = parse_arg_modes(op_int, n_args)
 
-    args = get_args(mem, args_raw, arg_modes, pointer, relative_base)
-
-    # This is ugly stuff... Basically have to do this fix 
-    # to make writing work properly
-    if (op_code in (1, 2, 3, 7, 8)) and (arg_modes[-1] == 0):
-        args[-1] = args_raw[-1]
-
-    if (op_code in (1, 2, 3, 7, 8)) and (arg_modes[-1] == 2):
-        args[-1] = relative_base + args_raw[-1]
+    args = get_args(mem, args_raw, arg_modes, pointer, relative_base, op_code)
 
     return func, args
 
 
 
 class Computer:
-    def __init__(self, program=None, failsafe = 1000000, mem_size = 2000):
+    def __init__(self, program=None, failsafe = 1000000, mem_size = 20_000):
         self.status = "IDLE, NO PROGRAM LOADED"
         self.failsafe = failsafe
-        self.mem_size = 2000
+        self.mem_size = mem_size
         self.state = ComputerState(
             mem=None,
             pointer=None,
@@ -256,10 +260,10 @@ class Computer:
         self._program = program.copy()
 
         if noun:
-            logging.debug(f"Setting noun to {noun}")
+            # logging.debug(f"Setting noun to {noun}")
             self._program[1] = noun
         if verb:
-            logging.debug(f"Setting verb to {verb}")
+            # logging.debug(f"Setting verb to {verb}")
             self._program[2] = verb
 
         logging.info("Program loaded")
@@ -289,6 +293,7 @@ class Computer:
         self.state.input_stack += [to_be_added]
 
     def run(self):
+        self.status = "PROGRAM STARTED"
         i = 0
         while True:
             if (self.state.mem[self.state.pointer] == 3) & (len(self.state.input_stack) == 0):
@@ -301,9 +306,9 @@ class Computer:
                 logging.info("Program has reached exit code and finished running")                
                 break
 
-            logging.debug("--------------------------------------------------------------------")
-            logging.debug("Running program, iteration: " + str(i))
-            logging.debug("Pointer at: " + str(self.state.pointer))
+            # logging.debug("--------------------------------------------------------------------")
+            # logging.debug("Running program, iteration: " + str(i))
+            # logging.debug("Pointer at: " + str(self.state.pointer))
 
             self._step()
 
