@@ -6,7 +6,7 @@ from random import sample
 
 import numpy as np
 
-from common import read_input
+from common import *
 from computer import Computer
 
 DIR_OFFSETS = {
@@ -15,20 +15,6 @@ DIR_OFFSETS = {
     3: (-1, 0),
     4: (1, 0),
 }
-
-
-def getchar():
-   #Returns a single character from standard input
-   import tty, termios, sys
-   fd = sys.stdin.fileno()
-   old_settings = termios.tcgetattr(fd)
-   try:
-      tty.setraw(sys.stdin.fileno())
-      ch = sys.stdin.read(1)
-   finally:
-      termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-   return ch
-
 
 class Map:
     def __init__(self):
@@ -47,7 +33,7 @@ class Map:
         # Note how x and y are represented in a np array
         x_max, y_max = map(max, zip(*cells.keys()))
         a = np.empty(shape=(y_max + 1, x_max + 1)).astype(int)
-        a[:] = -1
+        a[:] = -2
         for (x, y), v in cells.items():
             a[y_max - y, x] = v
 
@@ -56,7 +42,7 @@ class Map:
         a[y_max - (self.start[1] + y_shift), self.start[0] + x_shift] = 4
 
         # Print the array
-        conversion = {-1: " ", 0:"▓", 1: "░", 2:"€", 3:"@", 4:"S"}
+        conversion = {-2: " ", -1: ".", 0:"▓", 1: "░", 2:"€", 3:"@", 4:"S"}
         l = a.tolist()
         for line in l:
             print("|" + "".join(conversion.get(t, " ") for t in line))
@@ -125,7 +111,6 @@ class RepairBot:
             self.map.render(self.loc)
             print(f"At {self.loc}, distance: {self.map.distance[self.loc]}")
 
-
             user_input = getchar()
             # Clear console
             os.system('cls' if os.name == 'nt' else 'clear') 
@@ -146,37 +131,34 @@ class RepairBot:
                 self.step(4)
 
 
-def make_array(coords):
-    """Makes a np array out of coodinates"""
-    # Shift coords to avoid negatives
-    x_shift = abs(min(i[0] for i in coords.keys()))
-    y_shift = abs(min(i[1] for i in coords.keys()))
-    
-    cells = {(k[0] + x_shift, k[1] + y_shift): v for k, v in coords.items()}
 
-    # Create a numpy array from coordinate information
-    # Note how x and y are represented in a np array
-    x_max, y_max = map(max, zip(*cells.keys()))
-    a = np.empty(shape=(y_max + 1, x_max + 1)).astype(int)
-    a[:] = -1
-    for (x, y), v in cells.items():
-        a[y_max - y, x] = v
-
-    return a
+def get_good_neighbors(c, a):
+    tmp = (c[0] + 1, c[1]), (c[0] - 1, c[1]), (c[0], c[1] + 1), (c[0], c[1] - 1)
+    return set([c for c in tmp if a[c] == 1])
 
 
-def print_array(a, conversion):
-    l = a.tolist()
-    for line in l:
-        print("|" + "".join(conversion.get(t, " ") for t in line))
+def solve_step_2(coords):
+    a = make_array(coords)
 
+    oxygen_loc = np.where(a==2)
+    first = (oxygen_loc[0][0], oxygen_loc[1][0])
 
-def solve_step_2(map_coords):
-    a = make_array(map_coords)
+    frontier = {first}
+    i=-1
+    while sum(sum(a==1)) > 0:
+        next_round = frontier.copy()
+        for c in frontier:
+            next_round -= {c}
+            a[c] = 2 # Spread oxygen
+            next_round |= get_good_neighbors(c, a) # Get next round neighbors
+        frontier = next_round
 
-    conversion = {-1: " ", 0:"▓", 1: "░", 2:"€", 3:"@", 4:"S"}
-    print_array(a, conversion)
+        i += 1
+        if i > 10000:
+            print("FAILSAFE - BREAKING OUT OF LOOP")
+            break
 
+    print(f"Oxygen is fully spread in {i} minutes")
 
 
 if __name__ == "__main__":
@@ -187,14 +169,25 @@ if __name__ == "__main__":
 
     bot = RepairBot(program)
 
-    # Explore the map
-    for i in range(500000):
-        if i%1000 == 0:
+    # Can be used to visually explore the map (inputs from stdin)
+    # bot.run()
+
+    # Explore the map and report if item was found
+    found = 0
+    for i in range(500_000):
+        if i%10_000 == 0:
             print(f"Iteration: {i}")
         move = sample([1,2,3,4],1)[0]
         bot.step(move)
-    bot.map.render(bot.loc)
+        if (found == 0) & (bot.map.coords[bot.loc] == 2):
+            found = 1
+            d = bot.map.distance[bot.loc]
+            print(f"Found oxygen at {bot.loc}, distance: {d}")
+     
+    # This is a sketchy solution, we do not now if the map is
+    # fully explored or not... Use this to make sure
+    # bot.map.render(bot.loc)
 
     # Step 2
-    map_coords = bot.map.coords
-    solve_step_2(map_coords)
+    coords = bot.map.coords
+    solve_step_2(coords)

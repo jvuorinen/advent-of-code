@@ -3,7 +3,7 @@ logging.basicConfig(format='%(levelname)s %(message)s')
 from collections import defaultdict
 import math
 
-from common import read_input
+from common import *
 
 
 def tuplify(s):

@@ -5,26 +5,13 @@ import os
 
 import numpy as np
 
-from common import read_input
+from common import *
 from computer import Computer
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
-
-
-def getchar():
-   #Returns a single character from standard input
-   import tty, termios, sys
-   fd = sys.stdin.fileno()
-   old_settings = termios.tcgetattr(fd)
-   try:
-      tty.setraw(sys.stdin.fileno())
-      ch = sys.stdin.read(1)
-   finally:
-      termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-   return ch
 
 class ArcadeMachine:
     def __init__(self, program):
