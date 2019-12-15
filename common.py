@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 def read_input(fp):
     logging.info("Reading file: " + fp)

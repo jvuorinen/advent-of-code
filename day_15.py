@@ -33,7 +33,7 @@ class Map:
         # Note how x and y are represented in a np array
         x_max, y_max = map(max, zip(*cells.keys()))
         a = np.empty(shape=(y_max + 1, x_max + 1)).astype(int)
-        a[:] = -2
+        a[:] = -1
         for (x, y), v in cells.items():
             a[y_max - y, x] = v
 
@@ -42,7 +42,7 @@ class Map:
         a[y_max - (self.start[1] + y_shift), self.start[0] + x_shift] = 4
 
         # Print the array
-        conversion = {-2: " ", -1: ".", 0:"▓", 1: "░", 2:"€", 3:"@", 4:"S"}
+        conversion = {-1: " ", 0:"▓", 1: "░", 2:"€", 3:"@", 4:"S"}
         l = a.tolist()
         for line in l:
             print("|" + "".join(conversion.get(t, " ") for t in line))
@@ -129,7 +129,6 @@ class RepairBot:
 
             elif user_input == "l":
                 self.step(4)
-
 
 
 def get_good_neighbors(c, a):
