@@ -3,6 +3,9 @@ logging.basicConfig(format='%(levelname)s %(message)s')
 import re
 from itertools import combinations
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
 from common import read_input
 
 
@@ -56,6 +59,30 @@ class System:
     def simulate(self, steps):
         for _ in range(steps):
             self._step()
+
+    def simulate_and_draw_positions(self, n=150):
+        idx, x_hist, y_hist, z_hist = [], [], [], [] 
+
+        for _ in range(n):
+            x_positions = [b.pos.x for b in self.bodies]
+            y_positions = [b.pos.y for b in self.bodies]
+            z_positions = [b.pos.z for b in self.bodies]
+
+            idx.append(self.i)
+            x_hist.append(x_positions)
+            y_hist.append(x_positions)
+            z_hist.append(x_positions)
+
+            self._step()
+            
+        idx = [i for i in range(self.i-150, self.i)]
+        df_x = pd.DataFrame(x_hist, columns=['A', 'B', 'C', 'D'], index = idx)
+        df_y = pd.DataFrame(y_hist, columns=['A', 'B', 'C', 'D'], index = idx)
+        df_z = pd.DataFrame(z_hist, columns=['A', 'B', 'C', 'D'], index = idx)
+
+        df_x.plot()
+        df_y.plot()
+        df_z.plot()
 
     def _step(self):
         self.i += 1
@@ -123,6 +150,8 @@ if __name__ == "__main__":
     raw_in = read_input('data/day_12.txt')
 
     system = System(raw_in)
+
+    # system.simulate_and_draw_positions()
 
     # Step 1
     # system.simulate(1000)
