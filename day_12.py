@@ -2,6 +2,9 @@ import logging
 logging.basicConfig(format='%(levelname)s %(message)s')
 import re
 from itertools import combinations
+import operator
+from functools import reduce
+
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -35,10 +38,16 @@ class BodyOfMass:
         # logging.debug(f"Moving from {self.pos} to {new_pos}")
         self.pos = new_pos
 
-    def get_energy(self):
+    def get_potential_energy(self):
         potential = abs(self.pos.x) + abs(self.pos.y) + abs(self.pos.z)
+        return potential
+
+    def get_kinetic_energy(self):
         kinetic = abs(self.vel.x) + abs(self.vel.y) + abs(self.vel.z)
-        return potential * kinetic
+        return kinetic
+
+    def get_energy(self):
+        return self.get_kinetic_energy() + self.get_potential_energy()
 
 
 def parse_bodies_from_str(txt_lines):
@@ -70,12 +79,12 @@ class System:
 
             idx.append(self.i)
             x_hist.append(x_positions)
-            y_hist.append(x_positions)
-            z_hist.append(x_positions)
+            y_hist.append(y_positions)
+            z_hist.append(z_positions)
 
             self._step()
             
-        idx = [i for i in range(self.i-150, self.i)]
+        # idx = [i for i in range(self.i-150, self.i)]
         df_x = pd.DataFrame(x_hist, columns=['A', 'B', 'C', 'D'], index = idx)
         df_y = pd.DataFrame(y_hist, columns=['A', 'B', 'C', 'D'], index = idx)
         df_z = pd.DataFrame(z_hist, columns=['A', 'B', 'C', 'D'], index = idx)
@@ -83,6 +92,30 @@ class System:
         df_x.plot()
         df_y.plot()
         df_z.plot()
+
+    def simulate_and_draw_energies(self, n=150):
+        idx, potential, kinetic, total = [], [], [], []
+
+        for _ in range(n):
+            p = [abs(b.pos.x) for b in self.bodies]
+            k = [abs(b.vel.x) for b in self.bodies]
+            t = [a+b for a, b in zip(p,k)]
+            idx.append(self.i)
+            potential.append(p)
+            kinetic.append(k)
+            total.append(t)
+            self._step()
+            
+        # idx = [i for i in range(self.i-150, self.i)]
+        potential = pd.DataFrame(potential, columns=['A', 'B', 'C', 'D'], index = idx)
+        kinetic = pd.DataFrame(kinetic, columns=['A', 'B', 'C', 'D'], index = idx)
+        total = pd.DataFrame(kinetic, columns=['A', 'B', 'C', 'D'], index = idx)
+
+        potential.plot()
+        kinetic.plot()
+        total.plot()
+
+
 
     def _step(self):
         self.i += 1
@@ -152,6 +185,7 @@ if __name__ == "__main__":
     system = System(raw_in)
 
     # system.simulate_and_draw_positions()
+    # system.simulate_and_draw_energies(100)
 
     # Step 1
     # system.simulate(1000)
