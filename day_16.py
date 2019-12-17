@@ -2,6 +2,8 @@ import logging
 logging.basicConfig(format='%(levelname)s %(message)s')
 from itertools import repeat, chain, islice, cycle
 
+import numpy as np
+
 from common import read_input
 
 
@@ -25,6 +27,11 @@ def process(n, n_phases):
 
     return "".join(map(str, n))[:8]
 
+
+
+# nums = 6_500_000
+
+# p1 = np.array([x for x in islice((i for i in phase(1)), 0, nums, 1)])
 
 if __name__ == "__main__":
     logging.getLogger().setLevel("DEBUG")
