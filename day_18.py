@@ -79,11 +79,40 @@ def get_distances(symbol, a):
     return dict(d)
 
 
-def build_distance_lookup(a):
-    todo = ascii_lowercase + '@'
-    d = {c: get_distances(c, a) for c in todo}
+def get_present_keys(a):
+    all_chars_present = set([chr(x) for x  in np.unique(a)])
+    key_characters = set(ascii_lowercase)
+    return all_chars_present & key_characters
+    
 
+def build_distance_lookup(a):
+    todo = list(get_present_keys(a)) + ['@']
+    d = {c: get_distances(c, a) for c in todo}
     return d
+
+
+def get_possibilities(loc, keys_found, distances):
+
+    for k, v in distances[loc].items():
+        print(k,v)
+        doors = v.get('doors')
+        if doors:
+            print(k, doors)
+
+
+class GameState:
+    def __init__(self, id, loc, keys_found, steps, distances):
+        self.id = id
+        self.loc = loc
+        self.keys_found = keys_found
+        self.steps = steps
+        self.distances = distances
+        self.possibilities = get_possibilities(loc, keys_found)
+    
+    def __repr__(self):
+        return f"st-{self.id}"
+
+
 
 def solve_1(area):
     d = build_distance_lookup(area)
@@ -99,5 +128,8 @@ if __name__ == "__main__":
     raw_in = read_input('data/day_18.txt')
     area = str_to_array(raw_in)
 
-
+    # Dev
     a = area.copy()
+    loc = '@'
+    keys_found=set()
+    distances = build_distance_lookup(area)

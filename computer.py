@@ -270,6 +270,7 @@ class Computer:
         self.reset()
 
     def reset(self):
+        self.status = "IDLE, NOT STARTED"
         buffer = self.mem_size - len(self._program)
         self.state.mem = self._program.copy() + [0]*buffer
         self.state.input_stack = []
