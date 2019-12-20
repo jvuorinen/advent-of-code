@@ -2,11 +2,13 @@ import logging
 logging.basicConfig(format='%(levelname)s %(message)s')
 from string import ascii_lowercase, ascii_uppercase, ascii_letters
 from collections import defaultdict
+from queue import PriorityQueue
+from itertools import count
+from functools import lru_cache
 
 import numpy as np
 
 from common import *
-
 
 
 def str_to_array(raw_in):
@@ -28,98 +30,155 @@ def get_unfilled_neighbors(c, a):
     return set([c for c in tmp if a[c] not in (ord('#'), ord(' '))])
 
 
-def get_distances(symbol, a):
-    """Flood-fill algo to get distances from starting point"""
-    a = a.copy()
+def get_distances(symbol, area):
+    """Flood-fill algo to get distances from symbol point"""
+    a = area.copy()
+
     start = find_symbol(symbol, a)
-
     frontier = {start}
-    i=-1
     fill_symbol = " "
-    # letters = set(map(ord, ascii_letters))
-    key_codes = set(map(ord, ascii_lowercase))
-    door_codes = set(map(ord, ascii_uppercase))
+    node_codes = set([ord(c) for c in ascii_letters + '@'])
+    i=-1
+    d = {}
+    a[start] = ord('.')
 
-    d = defaultdict(dict)
-
-    a[start] = ord(fill_symbol)
-    while sum(sum(a==ord('.'))) > 0:
-
-        # Business logic
-        keys = set()
-        doors = set()
-        # End business logic
-        
+    while len(frontier) > 0:
         i += 1
         next_round = frontier.copy()
         for c in frontier:
-
             next_round -= {c}
-
-            # Business logic here
             code = a[c]
-            if code in key_codes:
-                keys.add(chr(code))
-            if code in door_codes:
-                doors.add(chr(code))
-            # End business logic
+
+            # Mark the distances
+            if a[c] in node_codes:
+                d[chr(code)] = i
+
+            # Only explore the free nodes further
+            if code == ord('.'):
+                next_round |= get_unfilled_neighbors(c, a) # Get next round neighbors
 
             a[c] = ord(fill_symbol) # Fill
-            next_round |= get_unfilled_neighbors(c, a) # Get next round neighbors
-            
-        # Business logic here
-        if (len(keys) > 0):
-            d[i]['keys'] = keys
-        if (len(doors) > 0):
-            d[i]['doors'] = doors
-        # End business logic
-
         frontier = next_round
 
-    return dict(d)
-
-
-def get_present_keys(a):
-    all_chars_present = set([chr(x) for x  in np.unique(a)])
-    key_characters = set(ascii_lowercase)
-    return all_chars_present & key_characters
-    
-
-def build_distance_lookup(a):
-    todo = list(get_present_keys(a)) + ['@']
-    d = {c: get_distances(c, a) for c in todo}
     return d
 
 
-def get_possibilities(loc, keys_found, distances):
+def get_present_nodes(area):
+    all_chars_present = set([chr(x) for x  in np.unique(area)])
+    node_characters = set(ascii_letters + '@')
+    return all_chars_present & node_characters
+    
 
-    for k, v in distances[loc].items():
-        print(k,v)
-        doors = v.get('doors')
-        if doors:
-            print(k, doors)
+def build_distance_lookup(area):
+    todo = list(get_present_nodes(area)) + ['@']
+    d = {c: get_distances(c, area) for c in todo}
+    return d
+
+@lru_cache(maxsize = None)
+def get_possibilities(loc, keys_found):
+    """Using Dijkstra's algorithm, get distances to all reachable keys"""
+    INF = 9999
+
+    keys = set(ascii_lowercase)
+    reachable_doors = set([c for c in ascii_uppercase if c.lower() in keys_found])
+    start_loc = set('@')
+    reachable = keys | reachable_doors | start_loc
+    present_in_the_map = set(DISTANCES.keys()) 
+
+    unvisited = reachable & present_in_the_map
+    visited = set()
+
+    tentative = {k: INF for k in present_in_the_map}
+    tentative[loc] = 0
+    current = loc
+
+    while True:
+        curr_d = tentative[current]
+        neighbors = DISTANCES[current]
+
+        for n, d in neighbors.items():
+            if n not in visited:
+                d_tmp = curr_d + d
+                tentative[n] = min(tentative[n], d_tmp)
+
+        unvisited.remove(current)
+        visited.add(current)
+
+        if len(unvisited) == 0:
+            break
+
+        current = min(unvisited, key=lambda x: tentative.get(x))
+
+    final = {k: v for k, v in tentative.items() if (k not in keys_found) and (v != 9999) and (k in ascii_lowercase)}
+    return final
+
+
+class GeneralInfo:
+    def __init__(self, all_keys, distances):
+        self.all_keys = all_keys
+        self.distances = distances
 
 
 class GameState:
-    def __init__(self, id, loc, keys_found, steps, distances):
-        self.id = id
+    def __init__(self, loc, keys_found, steps, final):
+        self.id = f"st-{loc}-{steps}-{keys_found}"
         self.loc = loc
         self.keys_found = keys_found
         self.steps = steps
-        self.distances = distances
-        self.possibilities = get_possibilities(loc, keys_found)
-    
-    def __repr__(self):
-        return f"st-{self.id}"
+        self.final = final
+        self.possibilities = get_possibilities(loc, frozenset(keys_found))
 
+    def __repr__(self):
+        return self.id
+
+    def step(self, key):
+        """Returns the next game state if stepping on key"""
+        next_keys = self.keys_found | {key}
+        next_steps = self.steps + self.possibilities[key]
+        final = (next_keys == ALL_KEYS)
+
+        return GameState(key, next_keys, next_steps, final)
+    
 
 
 def solve_1(area):
-    d = build_distance_lookup(area)
 
-    draw(area)
+    first_state = GameState(
+        loc = '@', 
+        keys_found = set(), 
+        steps = 0, 
+        final = False)
 
-    d['@']
+    unvisited = [first_state]
+    state_history = {} 
+    shortest_final = 999999
+
+    i = 0
+    discarded = 0
+    while unvisited:
+        if i % 500_000 == 0:
+            logging.info(f"Running... states explored {i:,}, states discarded: {discarded:,}, explore deck_size: {len(unvisited):,}, best so far: {shortest_final}")
+        s = unvisited.pop()
+        if s.final & (s.steps < shortest_final):
+            shortest_final = s.steps
+
+        for k in s.possibilities:
+            new_state = s.step(k)
+            new_state_str = f"{new_state.loc}-{new_state.keys_found}"
+            best_so_far = state_history.get(new_state_str)
+            if best_so_far:
+                if new_state.steps < best_so_far:
+                    unvisited.append(new_state)
+                    state_history[new_state_str] = new_state.steps
+                else:
+                    discarded += 1
+            else:
+                unvisited.append(new_state)
+                state_history[new_state_str] = new_state.steps
+        i += 1
+
+    print(f"All done")
+    print(f"Shortest final: {shortest_final}")
 
 
 if __name__ == "__main__":
@@ -128,8 +187,7 @@ if __name__ == "__main__":
     raw_in = read_input('data/day_18.txt')
     area = str_to_array(raw_in)
 
-    # Dev
-    a = area.copy()
-    loc = '@'
-    keys_found=set()
-    distances = build_distance_lookup(area)
+    DISTANCES = build_distance_lookup(area)
+    ALL_KEYS = set(ascii_lowercase) & get_present_nodes(area)
+
+    solve_1(area)
