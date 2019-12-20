@@ -122,18 +122,6 @@ def solve_2(scanner):
     x, y = 800, 500
     row_offset, col_offset, _, _ = get_info(scanner, x, y)         
 
-    # print("CRUDE SEARCH IN PROGRESS")
-    # # Crude search: go along cone until both offsets are positive
-    # row_offset, col_offset, row_area, col_area = get_info(scanner, x, y)
-
-    # while (row_offset < 0) | (col_offset < 0):
-    #     x = row_area[1] # Go x-wise to the bottom of cone
-    #     row_offset, col_offset, row_area, col_area = get_info(scanner, x, y)      
-    #     y = int((col_area[1] - col_area[0])/2) + col_area[0] # Go y-wise to the cone center
-    #     row_offset, col_offset, row_area, col_area = get_info(scanner, x, y)     
-
-    # Detailed search: find the correct spot
-    # while (row_offset != 0) | (col_offset != 0):
     STEP = 20
     while (row_offset != 0) | (col_offset != 0):
         print(f"Detailed search in progress, at {x, y}, offsets now: {row_offset, col_offset}")
@@ -168,10 +156,4 @@ if __name__ == "__main__":
     scanner = Scanner(program)
 
     solve_1(scanner, 50)
-
     solve_2(scanner)
-
-
-
-
-
