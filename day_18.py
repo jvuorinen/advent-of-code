@@ -37,7 +37,7 @@ def get_distances(symbol, area):
     start = find_symbol(symbol, a)
     frontier = {start}
     fill_symbol = " "
-    node_codes = set([ord(c) for c in ascii_letters + '@'])
+    node_codes = set([ord(c) for c in ascii_letters + '@1234'])
     i=-1
     d = {}
     a[start] = ord('.')
@@ -65,25 +65,24 @@ def get_distances(symbol, area):
 
 def get_present_nodes(area):
     all_chars_present = set([chr(x) for x  in np.unique(area)])
-    node_characters = set(ascii_letters + '@')
+    node_characters = set(ascii_letters + '@1234')
     return all_chars_present & node_characters
     
 
 def build_distance_lookup(area):
-    todo = list(get_present_nodes(area)) + ['@']
+    todo = list(get_present_nodes(area))
     d = {c: get_distances(c, area) for c in todo}
     return d
 
 @lru_cache(maxsize = None)
-def get_possibilities(loc, keys_found):
+def get_possibilities(loc, keys_found, distances):
     """Using Dijkstra's algorithm, get distances to all reachable keys"""
     INF = 9999
 
     keys = set(ascii_lowercase)
     reachable_doors = set([c for c in ascii_uppercase if c.lower() in keys_found])
-    start_loc = set('@')
-    reachable = keys | reachable_doors | start_loc
-    present_in_the_map = set(DISTANCES.keys()) 
+    reachable = keys | reachable_doors | set('@1234')
+    present_in_the_map = set(distances.keys()) 
 
     unvisited = reachable & present_in_the_map
     visited = set()
@@ -94,7 +93,7 @@ def get_possibilities(loc, keys_found):
 
     while True:
         curr_d = tentative[current]
-        neighbors = DISTANCES[current]
+        neighbors = distances[current]
 
         for n, d in neighbors.items():
             if n not in visited:
@@ -113,20 +112,27 @@ def get_possibilities(loc, keys_found):
     return final
 
 
+# Need to make an immutable dict in order to make lru cache work
+class HashableDict(dict):
+    def __hash__(self):
+        return hash(frozenset(self))
+
+
 class GeneralInfo:
     def __init__(self, all_keys, distances):
-        self.all_keys = all_keys
-        self.distances = distances
+        self.all_keys = frozenset(all_keys) 
+        self.distances = HashableDict(distances)
 
 
-class GameState:
-    def __init__(self, loc, keys_found, steps, final):
+class GameStateSingle:
+    def __init__(self, loc, keys_found, steps, final, general_info):
         self.id = f"st-{loc}-{steps}-{keys_found}"
         self.loc = loc
         self.keys_found = keys_found
         self.steps = steps
         self.final = final
-        self.possibilities = get_possibilities(loc, frozenset(keys_found))
+        self.possibilities = get_possibilities(loc, frozenset(keys_found), general_info.distances)
+        self.general_info = general_info
 
     def __repr__(self):
         return self.id
@@ -135,19 +141,74 @@ class GameState:
         """Returns the next game state if stepping on key"""
         next_keys = self.keys_found | {key}
         next_steps = self.steps + self.possibilities[key]
-        final = (next_keys == ALL_KEYS)
+        final = (next_keys == self.general_info.all_keys)
 
-        return GameState(key, next_keys, next_steps, final)
+        return GameStateSingle(key, next_keys, next_steps, final, self.general_info)
     
+
+class GameStateMulti:
+    def __init__(self, locs, keys_found, steps, final, general_info):
+        self.id = f"st-{locs}-{steps}-{keys_found}"
+        self.locs = locs
+        self.keys_found = keys_found
+        self.steps = steps
+        self.final = final
+        self.general_info = general_info
+        self.possibilities = self._get_possibilities()
+        self.steps_total = sum(self.steps)
+
+    def __repr__(self):
+        return self.id
+
+    def step(self, action):
+        """Returns the next game state if stepping on key"""
+        robo, key, dist = action
+
+        next_locs = list(self.locs)
+        next_locs[robo] = key
+        next_locs = tuple(next_locs)
+
+        next_keys = self.keys_found | {key}
+
+        next_steps = list(self.steps)
+        next_steps[robo] += dist
+        next_steps = tuple(next_steps)
+
+        final = (next_keys == self.general_info.all_keys)
+
+        new_state = GameStateMulti(
+            next_locs, 
+            next_keys, 
+            next_steps, 
+            final, 
+            self.general_info)
+
+        return new_state
+    
+    def _get_possibilities(self):
+        p = []
+        for i, loc in enumerate(self.locs):
+            possibles = get_possibilities(
+                loc, 
+                frozenset(self.keys_found), 
+                self.general_info.distances)
+            if possibles:
+                for k, v in possibles.items():
+                    p.append((i, k, v))
+        return tuple(p)
 
 
 def solve_1(area):
+    distances = build_distance_lookup(area)
+    all_keys = set(ascii_lowercase) & get_present_nodes(area)
+    general_info = GeneralInfo(all_keys, distances)
 
-    first_state = GameState(
+    first_state = GameStateSingle(
         loc = '@', 
         keys_found = set(), 
         steps = 0, 
-        final = False)
+        final = False,
+        general_info = general_info)
 
     unvisited = [first_state]
     state_history = {} 
@@ -181,13 +242,65 @@ def solve_1(area):
     print(f"Shortest final: {shortest_final}")
 
 
+def solve_2(area):
+    area = area_2
+
+    distances = build_distance_lookup(area)
+    all_keys = set(ascii_lowercase) & get_present_nodes(area)
+    general_info = GeneralInfo(all_keys, distances)
+
+    first_state = GameStateMulti(
+        locs = ('1', '2', '3', '4'), 
+        keys_found = set(), 
+        steps = (0,0,0,0), 
+        final = False,
+        general_info = general_info)
+
+    unvisited = [first_state]
+    state_history = {} 
+    shortest_final = 999999
+
+    i = 0
+    discarded = 0
+    while unvisited:
+        if i % 500_000 == 0:
+            logging.info(f"Running... states explored {i:,}, states discarded: {discarded:,}, explore deck_size: {len(unvisited):,}, best so far: {shortest_final}")
+        s = unvisited.pop()
+        if s.final & (s.steps_total < shortest_final):
+            shortest_final = s.steps_total
+
+        for a in s.possibilities:
+            new_state = s.step(a)
+            new_state_str = f"{new_state.locs}-{new_state.keys_found}"
+            best_so_far = state_history.get(new_state_str)
+            if best_so_far:
+                if new_state.steps_total < best_so_far:
+                    unvisited.append(new_state)
+                    state_history[new_state_str] = new_state.steps_total
+                else:
+                    discarded += 1
+            else:
+                unvisited.append(new_state)
+                state_history[new_state_str] = new_state.steps_total
+        i += 1
+
+    print(f"All done... states explored {i:,}, states discarded: {discarded:,}, explore deck_size: {len(unvisited):,}, best so far: {shortest_final}")
+    print(f"Shortest final: {shortest_final}")
+
+
+
+
 if __name__ == "__main__":
     logging.getLogger().setLevel("DEBUG")
 
-    raw_in = read_input('data/day_18.txt')
-    area = str_to_array(raw_in)
+    raw_1 = read_input('data/day_18_1.txt')
+    area_1 = str_to_array(raw_1)
 
-    DISTANCES = build_distance_lookup(area)
-    ALL_KEYS = set(ascii_lowercase) & get_present_nodes(area)
+    raw_2 = read_input('data/day_18_2.txt')
+    area_2 = str_to_array(raw_2)
 
-    solve_1(area)
+    # draw(area_1)
+    # draw(area_2)
+
+    # solve_1(area_1)
+    # solve_2(area_2)
