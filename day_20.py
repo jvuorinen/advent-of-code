@@ -13,11 +13,12 @@ def draw(a):
     CHARS = {n: chr(n) for n in range(256)}
     print_array(a, CHARS)
 
+
 def find_symbol(symbol, a):
     tmp = np.where(a == ord(symbol))
     if sum(sum(tmp)) > 0:
         if len(tmp[0]) > 1:
-            return [tuple(t) for t in np.where(a == ord(symbol))]
+            return list(zip(*tmp))
         else:
             return [(tmp[0][0], tmp[1][0])]
 
@@ -39,6 +40,12 @@ def get_unfilled_neighbors(c, a):
     return set([c for c in tmp if a[c] not in (ord('#'), ord(' '))])
 
 
+def get_teleport_pair(symbol, loc, teleport_dict):
+    print(f"Trying to get {symbol} from {loc}")
+    both = teleport_dict.get(symbol)
+    for i in both:
+        if i != loc:
+            return i
 
 def solve_1(area):
     a = area.copy()
@@ -60,12 +67,18 @@ def solve_1(area):
                 next_round |= get_unfilled_neighbors(c, a) # Get next round neighbors
             elif code == ord('Z'):
                 print(f"Part 1 answer: {i-1}")
-
+            else:
+                pair = get_teleport_pair(chr(code), c, td)
+                a[pair] = ord(fill_symbol) # Fill
+                neighbors = get_unfilled_neighbors(pair, a)
+                for n in neighbors:
+                    next_round |= get_unfilled_neighbors(n, a) # Get next round neighbors
+                    a[n] =  ord(fill_symbol)
             a[c] = ord(fill_symbol) # Fill
         frontier = next_round
         i += 1
 
-    draw(a)
+    # draw(a)
 
 
 if __name__ == "__main__":
@@ -75,6 +88,8 @@ if __name__ == "__main__":
 
     area = str_to_array(raw_in)
     draw(area)
+
+    solve_1(area)
 
     
 
