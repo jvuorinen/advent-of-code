@@ -1,15 +1,9 @@
 import logging
 logging.basicConfig(format='%(levelname)s %(message)s')
 
-from common import read_input
+from common import *
 
 import numpy as np
-
-def chunked(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
-
 
 def get_layers(image: str, height: int, width: int):
     layer_size = height * width

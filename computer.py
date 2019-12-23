@@ -266,7 +266,7 @@ class Computer:
             # logging.debug(f"Setting verb to {verb}")
             self._program[2] = verb
 
-        logging.info("Program loaded")
+        logging.debug("Program loaded")
         self.reset()
 
     def reset(self):
@@ -277,7 +277,7 @@ class Computer:
         self.state.outputs = []
         self.state.pointer = 0
         self.state.relative_base = 0
-        logging.info("State has been reset")
+        logging.debug("State has been reset")
 
     def _step(self):
         try:
@@ -299,12 +299,12 @@ class Computer:
         while True:
             if (self.state.mem[self.state.pointer] == 3) & (len(self.state.input_stack) == 0):
                 self.status = "WAITING INPUT"
-                logging.info("Program needs input and cannot continue running because input stack is empty")
+                logging.debug("Program needs input and cannot continue running because input stack is empty")
                 break
 
             if self.state.mem[self.state.pointer] == 99:
                 self.status = "FINISHED"
-                logging.info("Program has reached exit code and finished running")                
+                logging.debug("Program has reached exit code and finished running")                
                 break
 
             # logging.debug("--------------------------------------------------------------------")

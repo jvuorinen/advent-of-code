@@ -48,3 +48,9 @@ def print_array(a, conversion):
     l = a.tolist()
     for line in l:
         print("".join(conversion.get(t, " ") for t in line))
+
+
+def chunked(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
