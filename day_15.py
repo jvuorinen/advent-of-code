@@ -137,7 +137,7 @@ def get_good_neighbors(c, a):
 
 
 def solve_step_2(coords):
-    a = make_array(coords)
+    a = coords_to_array(coords)
 
     oxygen_loc = np.where(a==2)
     first = (oxygen_loc[0][0], oxygen_loc[1][0])

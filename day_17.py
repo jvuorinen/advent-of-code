@@ -7,7 +7,7 @@ import numpy as np
 from common import *
 from computer import Computer
 
-CHARS = {n: chr(n) for n in range(256)}
+
 
 def to_intcode(s):
     return [ord(c) for c in s]

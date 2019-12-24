@@ -1,6 +1,8 @@
 import logging
 import numpy as np
 
+CHARS = {n: chr(n) for n in range(256)}
+
 def read_input(fp):
     logging.info("Reading file: " + fp)
     with open(fp) as fh:
@@ -21,9 +23,13 @@ def getchar():
       termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
    return ch
 
+def str_to_array(raw_in):
+    as_list = [list(l) for l in raw_in]
+    tmp = [list(map(ord, l)) for l in as_list]
+    return np.array(tmp)
 
 
-def make_array(coords):
+def coords_to_array(coords):
     """Makes a np array out of coodinates"""
     # Shift coords to avoid negatives
     x_shift = abs(min(i[0] for i in coords.keys()))
@@ -41,8 +47,7 @@ def make_array(coords):
 
     return a
 
-
-def print_array(a, conversion):
+def print_array(a, conversion = CHARS):
     """Prints a np array to the screen"""
     # conversion = {-1: "░", 0:"▓", 1: " ", 2:"€", 3:"@", 4:"S"}
     l = a.tolist()

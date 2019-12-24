@@ -4,11 +4,6 @@ from string import ascii_letters
 
 from common import *
 
-def str_to_array(raw_in):
-    as_list = [list(l) for l in raw_in]
-    tmp = [list(map(ord, l)) for l in as_list]
-    return np.array(tmp)
-
 def draw(a):
     CHARS = {n: chr(n) for n in range(256)}
     print_array(a, CHARS)

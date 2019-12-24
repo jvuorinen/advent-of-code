@@ -26,7 +26,7 @@ def solve_1(scanner, high=50):
     for x in range(high+1):
         for y in range(high+1):
             coords[(x, y)] = scanner.scan(x, y)
-    a = make_array(coords)
+    a = coords_to_array(coords)
     print_array(a, {0: "░", 1: "▓"})
     print(f"Step 1 answer: {sum(sum(a==1))}")
 
