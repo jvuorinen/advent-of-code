@@ -297,7 +297,7 @@ class Computer:
         self.status = "PROGRAM STARTED"
         i = 0
         while True:
-            if (self.state.mem[self.state.pointer] == 3) & (len(self.state.input_stack) == 0):
+            if (str(self.state.mem[self.state.pointer])[-1] == '3') & (len(self.state.input_stack) == 0):
                 self.status = "WAITING INPUT"
                 logging.debug("Program needs input and cannot continue running because input stack is empty")
                 break
