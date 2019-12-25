@@ -1,15 +1,16 @@
 import logging
-logging.basicConfig(format='%(levelname)s %(message)s')
-import re
-from itertools import combinations
 import operator
+import re
 from functools import reduce
+from itertools import combinations
 
-
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 from common import read_input
+
+logging.basicConfig(format='%(levelname)s %(message)s')
 
 
 class Coordinate:
@@ -28,14 +29,13 @@ class Coordinate:
 class BodyOfMass:
     def __init__(self, pos: Coordinate):
         self.pos = pos
-        self.vel = Coordinate(0,0,0)
+        self.vel = Coordinate(0, 0, 0)
 
     def __repr__(self):
         return f"Position: {self.pos}, velocity: {self.vel}"
 
     def _step(self):
         new_pos = self.pos + self.vel
-        # logging.debug(f"Moving from {self.pos} to {new_pos}")
         self.pos = new_pos
 
     def get_potential_energy(self):
@@ -47,11 +47,11 @@ class BodyOfMass:
         return kinetic
 
     def get_energy(self):
-        return self.get_kinetic_energy() + self.get_potential_energy()
+        return self.get_kinetic_energy() * self.get_potential_energy()
 
 
 def parse_bodies_from_str(txt_lines):
-    parse_position = lambda txt: Coordinate(*re.findall(r"[-\d]+", txt))
+    def parse_position(txt): return Coordinate(*re.findall(r"[-\d]+", txt))
     bodies = [BodyOfMass(parse_position(txt)) for txt in txt_lines]
     return bodies
 
@@ -69,54 +69,6 @@ class System:
         for _ in range(steps):
             self._step()
 
-    def simulate_and_draw_positions(self, n=150):
-        idx, x_hist, y_hist, z_hist = [], [], [], [] 
-
-        for _ in range(n):
-            x_positions = [b.pos.x for b in self.bodies]
-            y_positions = [b.pos.y for b in self.bodies]
-            z_positions = [b.pos.z for b in self.bodies]
-
-            idx.append(self.i)
-            x_hist.append(x_positions)
-            y_hist.append(y_positions)
-            z_hist.append(z_positions)
-
-            self._step()
-            
-        # idx = [i for i in range(self.i-150, self.i)]
-        df_x = pd.DataFrame(x_hist, columns=['A', 'B', 'C', 'D'], index = idx)
-        df_y = pd.DataFrame(y_hist, columns=['A', 'B', 'C', 'D'], index = idx)
-        df_z = pd.DataFrame(z_hist, columns=['A', 'B', 'C', 'D'], index = idx)
-
-        df_x.plot()
-        df_y.plot()
-        df_z.plot()
-
-    def simulate_and_draw_energies(self, n=150):
-        idx, potential, kinetic, total = [], [], [], []
-
-        for _ in range(n):
-            p = [abs(b.pos.x) for b in self.bodies]
-            k = [abs(b.vel.x) for b in self.bodies]
-            t = [a+b for a, b in zip(p,k)]
-            idx.append(self.i)
-            potential.append(p)
-            kinetic.append(k)
-            total.append(t)
-            self._step()
-            
-        # idx = [i for i in range(self.i-150, self.i)]
-        potential = pd.DataFrame(potential, columns=['A', 'B', 'C', 'D'], index = idx)
-        kinetic = pd.DataFrame(kinetic, columns=['A', 'B', 'C', 'D'], index = idx)
-        total = pd.DataFrame(kinetic, columns=['A', 'B', 'C', 'D'], index = idx)
-
-        potential.plot()
-        kinetic.plot()
-        total.plot()
-
-
-
     def _step(self):
         self.i += 1
         self._apply_gravitations()
@@ -125,7 +77,6 @@ class System:
     def _apply_gravitations(self):
         pairs = combinations(self.bodies, 2)
         for a, b in pairs:
-            # logging.debug(f"Applying gravity for {a} and {b}")
             x_a, x_b = a.pos.x, b.pos.x
             y_a, y_b = a.pos.y, b.pos.y
             z_a, z_b = a.pos.z, b.pos.z
@@ -150,8 +101,6 @@ class System:
             elif z_a > z_b:
                 a.vel.z -= 1
                 b.vel.z += 1
-            
-            # logging.debug(f"Result {a} and {b}")
 
     def _move_bodies(self):
         for b in self.bodies:
@@ -164,39 +113,76 @@ class System:
         history = set(self._get_state_tuple())
         while True:
             if self.i % 100_000 == 0:
-                logging.info(f"Finding stability point, iterations done {self.i}")
+                logging.info(
+                    f"Finding stability point, iterations done {self.i}")
             self._step()
             state = self._get_state_tuple()
             if state in history:
-                print(f"Stabilisation point found. System is stabilized after iteration {self.i - 1}")
-                return 
+                print(
+                    f"Stabilisation point found. System is stabilized after iteration {self.i - 1}")
+                return
             else:
                 history.add(state)
 
     def _get_state_tuple(self):
-        state_history = tuple([(b.pos.x, b.pos.y, b.pos.z, b.vel.x, b.vel.y, b.vel.z) for b in self.bodies])
+        state_history = tuple(
+            [(b.pos.x, b.pos.y, b.pos.z, b.vel.x, b.vel.y, b.vel.z) for b in self.bodies])
         return state_history
+
+
+def solve_1(raw_in):
+    system = System(raw_in)
+    system.simulate(1000)
+
+    print(f"Step 1 answer: {system.get_energy()}")
+
+
+def get_states(system):
+    x_state = tuple((b.pos.x, b.vel.x) for b in system.bodies)
+    y_state = tuple((b.pos.y, b.vel.y) for b in system.bodies)
+    z_state = tuple((b.pos.z, b.vel.z) for b in system.bodies)
+    return x_state, y_state, z_state
+
+
+def solve_2(raw_in):
+    system = System(raw_in)
+    initial_x, initial_y, initial_z = get_states(system)
+
+    i = 0
+    x_stable, y_stable, z_stable = 0, 0, 0
+    stabs_found = 0
+
+    while True:
+        i += 1
+        system._step()
+        state_x, state_y, state_z = get_states(system)
+
+        if (x_stable == 0) & (state_x == initial_x):
+            x_stable = i
+            stabs_found += 1
+        if (y_stable == 0) & (state_y == initial_y):
+            y_stable = i
+            stabs_found += 1
+        if (z_stable == 0) & (state_z == initial_z):
+            z_stable = i
+            stabs_found += 1
+
+        if stabs_found == 3:
+            break
+    
+    lcm_1 = np.lcm(x_stable, y_stable)
+    lcm_2 = np.lcm(lcm_1, z_stable)
+    
+    print(f"Step 2 answer: {lcm_2}")
+    
 
 if __name__ == "__main__":
     logging.getLogger().setLevel("INFO")
 
     raw_in = read_input('data/day_12.txt')
 
-    system = System(raw_in)
-
-    # system.simulate_and_draw_positions()
-    # system.simulate_and_draw_energies(100)
-
     # Step 1
-    # system.simulate(1000)
-    # print(system)
-    # print(system.get_energy())
+    solve_1(raw_in)
 
-    # system.find_stability_point()
-
-
-
-
-
-
-
+    # Step 2
+    solve_2(raw_in)
