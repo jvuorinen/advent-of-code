@@ -1,8 +1,7 @@
 import logging
-from functools import reduce
+from functools import lru_cache, reduce
 from itertools import cycle, islice
 from operator import add
-from functools import lru_cache
 
 import numpy as np
 
@@ -10,61 +9,56 @@ from common import read_input
 
 logging.basicConfig(format='%(levelname)s %(message)s')
 
-@lru_cache(maxsize=None)
-def deal_with_increment(length, n):
-    idxes = list(range(length))
-    new_one = idxes.copy()
-    loop = islice(cycle(range(length)), 0, None, n)
+# @lru_cache(maxsize=None)
+def get_new_index(command, deck_size, idx):
+    words = command.split(' ') 
 
-    for i in range(len(deck)):
-        idxes[next(loop)] = new_one[i]
+    if (words[0] == 'deal') & (words[1] == 'with'):
+        n = int(words[-1])
+        tmp = (n * idx)
+        
+        return tmp - (int(tmp/deck_size)*deck_size)
 
-    return np.array(idxes)
+    elif (words[0] == 'deal') & (words[1] == 'into'):
+        return deck_size - 1 - idx
 
-@lru_cache(maxsize=None)
-def cut(length, n):
-    idxes = list(range(length))
-    idxes = idxes[n:] + idxes[:n]
-    return np.array(idxes)
+    elif words[0] == 'cut':
+        n = int(words[-1])
+        if n > 0:
+            if idx <= (n - 1):
+                return idx + (deck_size - n)
+            else:
+                return idx - n
+        else:
+            if idx <= (deck_size - 1 - abs(n)):
+                return idx + abs(n)
+            else:
+                return idx - (deck_size - abs(n))
 
 
-@lru_cache(maxsize=None)
-def deal_into_new_stack(length):
-    idxes = list(range(length))[::-1]
-    return np.array(idxes)
-
-def solve_1(deck, commands):
-    length = len(deck)
-    d = deck.copy()
+def solve_1(commands):
+    idx = 2019
+    deck_size = 10007
 
     for c in commands:
-        logging.debug("-----------------------------------")
-        logging.debug(d)
-        words = c.split(' ')
-        if (words[0] == 'deal') & (words[1] == 'with'):
-            n = int(words[-1])
-            logging.debug(f"Deal with inc {n}")
-            idxes = deal_with_increment(length, n)
-        elif (words[0] == 'deal') & (words[1] == 'into'):
-            logging.debug(f"Dealing into new stack")
-            idxes = deal_into_new_stack(length)
-        elif words[0] == 'cut':
-            n = int(words[-1])
-            logging.debug(f"Cutting {n}")
-            idxes = cut(length, n)
+        idx = get_new_index(c, deck_size, idx)
 
-        logging.debug(idxes)
-        d = d[idxes]
-        logging.debug(d)  
-    print(f"Step 1 answer: {np.where(d==2019)[0][0]}")      
-    return d
+    print(f"Part 1 answer: {idx}")
+
+
+# def solve_2(commands):
+#     idx = 2020
+#     deck_size = 101741582076661
+
+
+
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel("INFO")
+    logging.getLogger().setLevel("DEBUG")
 
     commands = read_input('data/day_22.txt')
 
-    # Step 1
-    deck = np.arange(10007)
-    d = solve_1(deck, commands)
-    
+    solve_1(commands)
+
+    # solve_2(commands)
+
