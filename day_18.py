@@ -302,5 +302,5 @@ if __name__ == "__main__":
     # draw(area_1)
     # draw(area_2)
 
-    # solve_1(area_1)
-    # solve_2(area_2)
+    solve_1(area_1)
+    solve_2(area_2)

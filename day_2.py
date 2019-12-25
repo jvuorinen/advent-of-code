@@ -17,7 +17,7 @@ def find_arguments(program, desired_value):
         for v in range(LOW, HIGH+1):
             computer.load(program, n, v)
             computer.run()
-            res = computer.mem[0]
+            res = computer.state.mem[0]
             results[res] = (n, v)
 
     return results.get(desired_value, "Desired result not found")
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     computer = Computer()
     computer.load(program, 12, 2)
     computer.run()
-    print("Part 1 result:",  computer.mem[0]) # Should be 3790689
+    print("Part 1 result:",  computer.state.mem[0]) # Should be 3790689
 
     # Part 2
     n, v = find_arguments(program, 19690720)

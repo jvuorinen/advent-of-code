@@ -17,8 +17,10 @@ if __name__ == "__main__":
     c.reset()
     c.add_input(1)
     c.run()
+    print(c.state.outputs[-1])
 
     # Part 2
     c.reset()
     c.add_input(2)
     c.run()
+    print(c.state.outputs[-1])

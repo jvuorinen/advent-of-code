@@ -87,4 +87,4 @@ if __name__ == "__main__":
     print(f"Part 1 answer: {count_all_relations(orbits)}") # should be 245089
 
     # Part 2:
-    print(f"Part 2 answer: {find_shortest_path(orbits, 'YOU', 'SAN')}") # should be 245089
+    print(f"Part 2 answer: {find_shortest_path(orbits, 'YOU', 'SAN')}")

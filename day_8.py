@@ -16,6 +16,7 @@ def solve_part_1(layers):
     a = min(layers, key = lambda a: (a==0).sum()) # layer with least zeros
     return (a==1).sum() * (a==2).sum()
 
+
 def solve_part_2(layers):
     big_3d = np.stack(layers)
     _, n_rows, n_cols = big_3d.shape

@@ -20,10 +20,10 @@ if __name__ == "__main__":
     computer.reset()
     computer.add_input(1)
     computer.run() 
-    print(f"Part 1 answer: {computer.outputs[-1]}") # Should be 9219874
+    print(f"Part 1 answer: {computer.state.outputs[-1]}") # Should be 9219874
 
     # Part 2
     computer.reset()
     computer.add_input(5)
     computer.run() 
-    print(f"Part 1 answer: {computer.outputs[-1]}") # Should be 5893654
+    print(f"Part 1 answer: {computer.state.outputs[-1]}") # Should be 5893654

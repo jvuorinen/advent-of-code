@@ -21,7 +21,7 @@ class Amp:
     def amplify(self, in_signal):
         self.computer.add_input(in_signal)
         self.computer.run()
-        return self.computer.outputs[-1]
+        return self.computer.state.outputs[-1]
         
 
 def solve(program, phase_possibilities):

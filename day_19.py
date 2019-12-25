@@ -143,9 +143,7 @@ def solve_2(scanner):
             print(f"Decreasing step from {STEP} to {new_step}")
             STEP = new_step     
 
-    print(x, y, x*10_000+y)
-
-    get_info(scanner, x, y)
+    print(f"Step 2 answer: {x*10_000+y}")
 
 
 if __name__ == "__main__":
