@@ -1,13 +1,12 @@
 import logging
 logging.basicConfig(format='%(levelname)s %(message)s')
 from string import ascii_letters
+from itertools import count
 
 from common import *
 
-def draw(a):
-    CHARS = {n: chr(n) for n in range(256)}
-    print_array(a, CHARS)
-
+CHARS = {n: chr(n) for n in range(256)}
+FILL_SYMBOL = " "
 
 def find_symbol(symbol, a):
     tmp = np.where(a == ord(symbol))
@@ -16,7 +15,6 @@ def find_symbol(symbol, a):
             return list(zip(*tmp))
         else:
             return [(tmp[0][0], tmp[1][0])]
-
 
 def create_teleport_dict(area):
     pairs = {}
@@ -29,60 +27,79 @@ def create_teleport_dict(area):
             pass
     return pairs
 
-
 def get_unfilled_neighbors(c, a):
     tmp = (c[0] + 1, c[1]), (c[0] - 1, c[1]), (c[0], c[1] + 1), (c[0], c[1] - 1)
     return set([c for c in tmp if a[c] not in (ord('#'), ord(' '))])
 
 
 def get_teleport_pair(symbol, loc, teleport_dict):
-    print(f"Trying to get {symbol} from {loc}")
+    logging.debug(f"Trying to get {symbol} from {loc}")
     both = teleport_dict.get(symbol)
     for i in both:
         if i != loc:
             return i
 
+class Maze:
+    def __init__(self, area, start=None, level=None):
+        self.area = area.copy()
+        self.frontier = set()
+
+        if start:
+            self.area[start] = ord(FILL_SYMBOL)
+            self.frontier |= get_unfilled_neighbors(start, self.area)
+
+    def draw(self):
+        print_array(self.area, CHARS)
+
+    def step(self):
+        nodes_reached = set()
+        next_round = self.frontier.copy()
+        for c in self.frontier:
+            next_round -= {c}
+            code = self.area[c]
+
+            if code == ord('.'):
+                next_round |= get_unfilled_neighbors(c, self.area) # Get next round neighbors
+            else:
+                nodes_reached.add((chr(code), c))
+
+            self.area[c] = ord(FILL_SYMBOL) # Fill
+        self.frontier = next_round
+        return nodes_reached
+
+    def teleport_to(self, destination):
+        self.area[destination] = ord(FILL_SYMBOL)
+        neighbors = get_unfilled_neighbors(destination, self.area)
+        for n in neighbors:
+            self.area[n] =  ord(FILL_SYMBOL)
+            self.frontier |= get_unfilled_neighbors(n, self.area) # Get next round neighbors
+
+
+
 def solve_1(area):
-    a = area.copy()
+    start = find_symbol('A', area)[0]
     td = create_teleport_dict(area)
 
-    start = find_symbol('A', area)[0]
-
-    frontier = {start}
-    fill_symbol = " "
-
-    i = -1
-    a[start] = ord('.')
-    while len(frontier) > 0:
-        next_round = frontier.copy()
-        for c in frontier:
-            next_round -= {c}
-            code = a[c]
-            if code == ord('.'):
-                next_round |= get_unfilled_neighbors(c, a) # Get next round neighbors
-            elif code == ord('Z'):
-                print(f"Part 1 answer: {i-1}")
-            else:
-                pair = get_teleport_pair(chr(code), c, td)
-                a[pair] = ord(fill_symbol) # Fill
-                neighbors = get_unfilled_neighbors(pair, a)
-                for n in neighbors:
-                    next_round |= get_unfilled_neighbors(n, a) # Get next round neighbors
-                    a[n] =  ord(fill_symbol)
-            a[c] = ord(fill_symbol) # Fill
-        frontier = next_round
-        i += 1
-
-    # draw(a)
+    maze = Maze(area, start)
+    
+    for i in range(10_000):
+        nodes_reached = maze.step()
+        if nodes_reached:
+            for symbol, loc in nodes_reached:
+                if symbol == 'Z':
+                    print(f"Reached end on step {i-1}")
+                    return
+                else:
+                    destination = get_teleport_pair(symbol, loc, td)
+                    maze.teleport_to(destination)
+    maze.draw()
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel("DEBUG")
+    logging.getLogger().setLevel("INFO")
 
     raw_in = read_input('data/day_20.txt')
-
     area = str_to_array(raw_in)
-    draw(area)
 
     solve_1(area)
 

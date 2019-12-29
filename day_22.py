@@ -46,9 +46,19 @@ def solve_1(commands):
     print(f"Part 1 answer: {idx}")
 
 
-# def solve_2(commands):
-#     idx = 2020
-#     deck_size = 101741582076661
+def solve_2(commands):
+    idx = 2020
+    deck_size = 101741582076661
+
+    i = 0
+    while True:
+        i += 1
+        if i%500_000 == 0:
+            logging.info(f"On iteration {i:,}")
+        for c in commands:
+            idx = get_new_index(c, deck_size, idx)  
+        if idx == 2020:
+            return i
 
 
 
@@ -60,5 +70,5 @@ if __name__ == "__main__":
 
     solve_1(commands)
 
-    # solve_2(commands)
+    # r = solve_2(commands)
 
