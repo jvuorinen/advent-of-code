@@ -6,47 +6,13 @@ SIZE = 5
 POINTS = np.array([2**i for i in range(SIZE**2)])
 
 
-class RegularGrid:
-    def __init__(self, area):
-        self.area = area.copy()
 
-    def get_neighbors(self, c):
-        tmp = (c[0] + 1, c[1]), (c[0] - 1, c[1]
-                                 ), (c[0], c[1] + 1), (c[0], c[1] - 1)
-        return [self.area[c] for c in tmp]
-
-    def update(self):
-        a = self.area.copy()
-        maxlen = SIZE + 1
-
-        for i in range(1, maxlen):
-            for j in range(1, maxlen):
-                neighbors = self.get_neighbors((i, j))
-                n_bugs = len([n for n in neighbors if n == ord('#')])
-
-                if (self.area[i, j] == ord('.')) & (n_bugs in (1, 2)):
-                    a[i, j] = ord('#')
-                elif (self.area[i, j] == ord('#')) & (n_bugs != 1):
-                    a[i, j] = ord('.')
-                else:
-                    a[i, j] = self.area[i, j]
-
-        self.area = a.copy()
-
-    def get_rating(self):
-        maxlen = SIZE + 1
-        bugs = self.area[1:maxlen, 1:maxlen].flatten() == ord('#')
-
-        total = sum(bugs * POINTS)
-        return total
-
-    def draw(self):
-        print_array(self.area)
-
-
-def _get_same_level_neighbors(i, j):
+def _get_same_level_neighbors(i, j, remove_center=True):
     candidates = [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
-    return [(a, b) for a, b in candidates if (0 <= a <= 4) & (0 <= b <= 4) & ((a, b) != (2, 2))]
+    if remove_center:
+        return [(a, b) for a, b in candidates if (0 <= a <= 4) & (0 <= b <= 4) & ((a, b) != (2, 2))]
+    else:
+        return [(a, b) for a, b in candidates if (0 <= a <= 4) & (0 <= b <= 4)]
 
 
 def _get_outer_level_neighbors(i, j):
@@ -87,6 +53,40 @@ def _create_neighbor_dict():
         for i in range(5) for j in range(5)}
     del(neighbors[(2, 2)])
     return neighbors
+
+
+class RegularGrid:
+    def __init__(self, area):
+        self.area = area.copy()
+
+    def _calculate_neighboring_bugs(self, c):
+        cells = _get_same_level_neighbors(*c, remove_center=False)
+        n_bugs = sum(self.area[c] == ord('#') for c in cells)
+        return n_bugs
+
+    def update(self):
+        a = self.area.copy()
+
+        for i in range(SIZE):
+            for j in range(SIZE):
+                n_nbr_bugs = self._calculate_neighboring_bugs((i, j))
+
+                if (self.area[i, j] == ord('.')) & (n_nbr_bugs in (1, 2)):
+                    a[i, j] = ord('#')
+                elif (self.area[i, j] == ord('#')) & (n_nbr_bugs != 1):
+                    a[i, j] = ord('.')
+                else:
+                    a[i, j] = self.area[i, j]
+
+        self.area = a.copy()
+
+    def get_rating(self):
+        bugs = self.area.flatten() == ord('#')
+        total = sum(bugs * POINTS)
+        return total
+
+    def draw(self):
+        print_array(self.area)
 
 
 class RecursiveGrid:
@@ -218,6 +218,6 @@ if __name__ == "__main__":
     raw_in = read_input('data/day_24.txt')
     area = str_to_array(raw_in)
 
-    # solve_1(area)
+    solve_1(area)
 
     solve_2(area)
