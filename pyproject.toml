@@ -1,3 +1,23 @@
+[project]
+name = "advent-of-code"
+version = "0.1.0"
+description = "Advent of Code solutions"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "pandas",
+    "sympy",
+    "jupyter",
+    "tqdm",
+    "seaborn",
+    "networkx",
+    "scipy",
+    "numba",
+    "pytest",
+    "pylint",
+    "ruff",
+]
+
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
