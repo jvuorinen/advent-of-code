@@ -1,18 +1,23 @@
-from itertools import combinations, permutations, product, count, cycle
-from functools import reduce, cache
-from collections import Counter, defaultdict, deque
-from math import prod
-import numpy as np
-from re import findall
-import networkx as nx
-from tqdm import tqdm
 from utils import read, print_answers
 
-raw = read().split("\n")
-# raw = read(2025, None).split("\n")
+a1 = a2 = 0
+r = 50
+for x in read(2025, 1).split("\n"):
+    a = -1 if x[0] == "L" else 1
+    b = int(x[1:])
+    n = (a * b)
+
+    d, m = divmod(r + n, 100)
+    a1 += (m == 0)
+
+    if n > 0:
+        a2 += d
+    elif r > 0:
+        a2 += abs(d) + (m == 0)
+    else:
+        a2 += abs(d) - 1 + (m == 0)
+
+    r = m
 
 
-a1 = None
-a2 = None
-
-print_answers(a1, a2, day=99)
+print_answers(a1, a2, day=1)
