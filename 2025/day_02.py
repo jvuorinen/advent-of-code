@@ -1,18 +1,12 @@
-from itertools import combinations, permutations, product, count, cycle
-from functools import reduce, cache
-from collections import Counter, defaultdict, deque
-from math import prod
-import numpy as np
 from re import findall
-import networkx as nx
-from tqdm import tqdm
 from utils import read, print_answers
 
-raw = read().split("\n")
-# raw = read(2025, 2).split("\n")
+ranges = [tuple(map(int, x.split("-"))) for x in read(2025, 2).split(",")]
 
-
-a1 = None
-a2 = None
+a1 = a2 = 0
+for a, b in ranges:
+    for n in range(int(a), int(b) + 1):
+        a1 += n if findall(r"^(\d+)\1$", str(n)) else 0
+        a2 += n if findall(r"^(\d+)(?:\1)+$", str(n)) else 0
 
 print_answers(a1, a2, day=2)
