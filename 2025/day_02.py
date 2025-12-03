@@ -7,6 +7,6 @@ a1 = a2 = 0
 for a, b in ranges:
     for n in range(int(a), int(b) + 1):
         a1 += n if findall(r"^(\d+)\1$", str(n)) else 0
-        a2 += n if findall(r"^(\d+)(?:\1)+$", str(n)) else 0
+        a2 += n if findall(r"^(\d+)\1+$", str(n)) else 0
 
 print_answers(a1, a2, day=2)
