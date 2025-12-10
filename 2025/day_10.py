@@ -1,6 +1,4 @@
-import numpy as np
 from re import findall
-
 from ortools.sat.python import cp_model
 from utils import read, print_answers
 
@@ -45,7 +43,7 @@ def solve_ilp(machine):
             coeffs[j][i] = 1
 
     for cf, jolt in zip(coeffs, jolts):
-        ixs = np.where(cf)[0]
+        ixs = [i for i, val in enumerate(cf) if val]
         model.Add(sum(x[i] for i in ixs) == jolt)
 
     model.Minimize(sum(x))
