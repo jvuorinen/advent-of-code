@@ -16,6 +16,7 @@ dependencies = [
     "pytest",
     "pylint",
     "ruff",
+    "ortools>=9.14.6206",
 ]
 
 [tool.ruff]
