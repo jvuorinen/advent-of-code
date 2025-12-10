@@ -39,11 +39,10 @@ def solve_ilp(machine):
     model = cp_model.CpModel()
     x = [model.NewIntVar(0, 1000, f"x{i}") for i in range(len(buttons))]
 
-    coeffs = np.array([[0]*len(jolts)]*len(buttons))
+    coeffs = [[0 for _ in range(len(buttons))] for _ in range(len(jolts))]
     for i, b in enumerate(buttons):
         for j in b:
-            coeffs[i, j] = 1
-    coeffs = coeffs.T
+            coeffs[j][i] = 1
 
     for cf, jolt in zip(coeffs, jolts):
         ixs = np.where(cf)[0]
