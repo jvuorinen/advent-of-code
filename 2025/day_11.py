@@ -1,36 +1,21 @@
-from itertools import combinations, permutations, product, count, cycle
-from functools import reduce, cache
-from collections import Counter, defaultdict, deque
-from math import prod
-import numpy as np
-from re import findall
-import networkx as nx
-from tqdm import tqdm
+from functools import cache
 from utils import read, print_answers
 
-# raw = read().split("\n")
 raw = read(2025, 11).split("\n")
 
 G = {}
 for line in raw:
-    a, b = line.split(': ')
-    G[a] = b.split(' ')
+    a, b = line.split(": ")
+    G[a] = b.split(" ")
 
+@cache
+def count(node, end, cnt=0):
+    return (node == end) or sum(count(n, end, cnt) for n in G.get(node, []))
 
-def crawl(node, end, cnt = 0, path = None):
-    path = path or []
-    if node == end:
-        return 1
-    return sum( crawl(n, end, cnt, path) for n in G.get(node, []))
-
-crawl("you", "out")
-
-crawl("dac", "out")
-crawl("fft", "out")
-
-
-
-a1 = len(tally["paths"])
-a2 = len([x for x in tally["paths"] if "dac" in ])
+a1 = count("you", "out")
+a2 = sum([
+    count("svr", "dac") * count("dac", "fft") * count("fft", "out"),
+    count("svr", "fft") * count("fft", "dac") * count("dac", "out"),
+])
 
 print_answers(a1, a2, day=11)
