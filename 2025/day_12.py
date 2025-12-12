@@ -1,18 +1,14 @@
-from itertools import combinations, permutations, product, count, cycle
-from functools import reduce, cache
-from collections import Counter, defaultdict, deque
 from math import prod
-import numpy as np
-from re import findall
-import networkx as nx
-from tqdm import tqdm
 from utils import read, print_answers
 
-raw = read().split("\n")
-# raw = read(2025, 12).split("\n")
+raw = read(2025, 12).split("\n\n")
 
+todo = []
+for line in raw[-1].split("\n"):
+    a, b = line.split(': ')
+    todo.append((tuple(map(int, a.split('x'))), tuple(map(int, b.split(' ')))))
 
-a1 = None
+a1 = sum([(prod(a) - sum(9*x for x in b)) >= 0 for a, b in todo])
 a2 = None
 
 print_answers(a1, a2, day=12)

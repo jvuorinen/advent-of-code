@@ -29,7 +29,7 @@ def build_lookups(buttons):
             if omnipresent:
                 d[e] = omnipresent
         cant_avoid.append(d)
-    
+
     available = []
     for i in range(nb):
         available.append(set.union(*[set(x) for x in buttons[i:]]))
@@ -52,70 +52,66 @@ def do_forced_moves(buttons, jolts, cnt):
     return jolts, cnt
 
 
-
 def dfs(buttons, jolts, ix=0, cnt=0, cant_avoid=None, available=None, tally=None):
     if tally is None:
         tally = {
             "best": 500,
             "start_time": time(),
         }
+    if cnt > 300:
+        return
 
     if cant_avoid is None:
         cant_avoid, available = build_lookups(buttons)
     # print(jolts, ix, cnt, br)
-    if (len(buttons) == 0):
+    if len(buttons) == 0:
         if sum(jolts) == 0:
-            if cnt < tally["best"]:
-                # print(f"Best {cnt}")
-                tally["best"] = cnt
             return cnt
-        return 999
-    
+        return 
+
     jolts, cnt = do_forced_moves(buttons, jolts, cnt)
-    
+
     # Infeasibilty checks
     needed = set([i for i, x in enumerate(jolts) if x > 0])
     if any([x < 0 for x in jolts]):
-        return 999
+        return
 
     if not ((needed & available[ix]) == needed):
-        return 999
+        return
 
     dontpush = set([i for i, x in enumerate(jolts) if x == 0])
     for x in needed:
         if dontpush & cant_avoid[ix].get(x, set()):
-            return 999
+            return
 
     _pressed = list(jolts)
     for b in buttons[0]:
         _pressed[b] -= 1
 
-    best = min(
-        dfs(buttons[:], _pressed, ix, cnt+1, cant_avoid, available, tally),
-        dfs(buttons[1:], _pressed, ix+1, cnt+1, cant_avoid, available, tally),
-        dfs(buttons[1:], jolts, ix+1, cnt, cant_avoid, available, tally),
+    best = (
+        dfs(buttons[:], _pressed, ix, cnt + 1, cant_avoid, available, tally)
+        or dfs(buttons[1:], _pressed, ix + 1, cnt + 1, cant_avoid, available, tally)
+        or dfs(buttons[1:], jolts, ix + 1, cnt, cant_avoid, available, tally)
     )
-    if ix == 0:
-        print(f"Finished branch at level {ix}, best {tally["best"]}")
+
     return best
 
-machine = machines[1]
+
+machine = machines[18]
 _, buttons, jolts = machine
 dfs(buttons, list(jolts))
 
-# for i, machine in enumerate(machines):
-#     tally = {
-#         "best": 500,
-#         "start_time": time(),
-#     }
+def solve_all(machines):
+    a2 = 0
+    for i, machine in enumerate(machines):
+        _, buttons, jolts = machine
+        # solve_ilp(machine)
 
-#     _, buttons, jolts = machine
-#     # solve_ilp(machine)
+        a2 += dfs(buttons, list(jolts))
+        print(i, a2)
+    return a2
 
-#     res = dfs(buttons, list(jolts))
-#     print(i, res)
-
-
+%time a2 = solve_all(machines)
 
 def solve_ilp(machine):
     _, buttons, jolts = machine
