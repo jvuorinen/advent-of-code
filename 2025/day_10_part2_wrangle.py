@@ -1,3 +1,4 @@
+from time import time
 from re import findall
 from ortools.sat.python import cp_model
 from utils import read, print_answers
@@ -13,28 +14,6 @@ for line in raw:
     buttons = sorted(buttons, key=lambda x: (len(x), x))[::-1]
     jolts = tuple(map(int, c.split(",")))
     machines.append((target, buttons, jolts))
-
-
-def bfs(machine):
-    target, buttons, _ = machine
-
-    start = tuple([False] * len(target))
-    batch = [start]
-    for i in range(1000):
-        _batch = []
-        for state in batch:
-            if state == target:
-                return i
-            for b in buttons:
-                _state = list(state)
-                for ix in b:
-                    _state[ix] = not _state[ix]
-                _batch.append(tuple(_state))
-        batch = _batch
-
-tally = {
-    "best": 300
-}
 
 
 def build_lookups(buttons):
@@ -57,21 +36,48 @@ def build_lookups(buttons):
 
     return cant_avoid, available
 
-def dfs(buttons, jolts, ix=0, cnt=0, cant_avoid=None, available=None):
+
+def do_forced_moves(buttons, jolts, cnt):
+    for i, n in enumerate(jolts):
+        if (n > 0) and len(bs := [b for b in buttons if i in b]) == 1:
+            # print(f"forced! {buttons} {jolts} {cnt} =>")
+            _jolts = list(jolts)
+            for j in bs[0]:
+                _jolts[j] -= n
+            jolts = tuple(_jolts)
+            cnt = cnt + n
+            # print(f"{buttons} {jolts} {cnt}")
+            # print()
+            return jolts, cnt
+    return jolts, cnt
+
+
+
+def dfs(buttons, jolts, ix=0, cnt=0, cant_avoid=None, available=None, tally=None):
+    if tally is None:
+        tally = {
+            "best": 500,
+            "start_time": time(),
+        }
+
     if cant_avoid is None:
         cant_avoid, available = build_lookups(buttons)
     # print(jolts, ix, cnt, br)
     if (len(buttons) == 0):
         if sum(jolts) == 0:
             if cnt < tally["best"]:
-                print(f"Best {cnt}")
+                # print(f"Best {cnt}")
                 tally["best"] = cnt
             return cnt
         return 999
+    
+    jolts, cnt = do_forced_moves(buttons, jolts, cnt)
+    
+    # Infeasibilty checks
+    needed = set([i for i, x in enumerate(jolts) if x > 0])
     if any([x < 0 for x in jolts]):
         return 999
 
-    needed = set([i for i, x in enumerate(jolts) if x > 0])
     if not ((needed & available[ix]) == needed):
         return 999
 
@@ -80,21 +86,36 @@ def dfs(buttons, jolts, ix=0, cnt=0, cant_avoid=None, available=None):
         if dontpush & cant_avoid[ix].get(x, set()):
             return 999
 
-    _pressed = jolts[:]
+    _pressed = list(jolts)
     for b in buttons[0]:
         _pressed[b] -= 1
 
-    return min(
-        dfs(buttons[:], _pressed, ix, cnt+1, cant_avoid, available),
-        dfs(buttons[1:], _pressed, ix+1, cnt+1, cant_avoid, available),
-        dfs(buttons[1:], jolts, ix+1, cnt, cant_avoid, available),
+    best = min(
+        dfs(buttons[:], _pressed, ix, cnt+1, cant_avoid, available, tally),
+        dfs(buttons[1:], _pressed, ix+1, cnt+1, cant_avoid, available, tally),
+        dfs(buttons[1:], jolts, ix+1, cnt, cant_avoid, available, tally),
     )
+    if ix == 0:
+        print(f"Finished branch at level {ix}, best {tally["best"]}")
+    return best
 
 machine = machines[1]
 _, buttons, jolts = machine
-solve_ilp(machine)
+dfs(buttons, list(jolts))
 
-%time dfs(buttons, list(jolts))
+# for i, machine in enumerate(machines):
+#     tally = {
+#         "best": 500,
+#         "start_time": time(),
+#     }
+
+#     _, buttons, jolts = machine
+#     # solve_ilp(machine)
+
+#     res = dfs(buttons, list(jolts))
+#     print(i, res)
+
+
 
 def solve_ilp(machine):
     _, buttons, jolts = machine
@@ -118,7 +139,6 @@ def solve_ilp(machine):
     return sum(solver.Value(v) for v in x)
 
 
-a1 = sum(map(bfs, machines))
 a2 = sum(map(solve_ilp, machines))
 
 print_answers(a1, a2, day=10)
