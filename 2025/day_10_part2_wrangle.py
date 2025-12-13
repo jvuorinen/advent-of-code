@@ -29,8 +29,8 @@ def do_forced_moves(buttons, jolts, cnt):
             # print()
             return buttons, jolts, cnt
 
-def is_infeasible(buttons, jolts, cnt):
-    if (cnt > 300) or (len(buttons) == 0) or any([x < 0 for x in jolts]):
+def is_infeasible(buttons, jolts, cnt, best):
+    if (cnt > best[0]) or (len(buttons) == 0) or any([x < 0 for x in jolts]):
         return True
     needed = set([i for i, x in enumerate(jolts) if x > 0]) 
     available = set.union(*[set(x) for x in buttons])
@@ -46,22 +46,28 @@ def is_possible(button, jolts):
     return True
 
 
-def dfs(buttons, jolts, cnt=0):
+def dfs(buttons, jolts, cnt=0, best=None):
+    if best == None:
+        best = [300]
     if all([x==0 for x in jolts]):
+        best[0] = min(best[0], cnt)
         return cnt
     if (_state := do_forced_moves(buttons, jolts, cnt)):
         return dfs(*_state)
 
     buttons = [b for b in buttons if is_possible(b, jolts)]
 
-    if is_infeasible(buttons, jolts, cnt):
-        return
+    if is_infeasible(buttons, jolts, cnt, best):
+        return 999
 
     _pressed = list(jolts)
     for b in buttons[0]:
         _pressed[b] -= 1
 
-    return dfs(buttons, _pressed, cnt + 1) or dfs(buttons[1:], jolts, cnt)
+    return min(
+        dfs(buttons, _pressed, cnt + 1, best),
+        dfs(buttons[1:], jolts, cnt, best),
+    )
 
 
 
