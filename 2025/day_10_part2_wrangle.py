@@ -1,5 +1,7 @@
 from time import time
+from dataclasses import dataclass, field
 from re import findall
+from tqdm import tqdm
 from ortools.sat.python import cp_model
 from utils import read, print_answers
 
@@ -29,8 +31,10 @@ def do_forced_moves(buttons, jolts, cnt):
             # print()
             return buttons, jolts, cnt
 
-def is_infeasible(buttons, jolts, cnt, best):
-    if (cnt > best[0]) or (len(buttons) == 0) or any([x < 0 for x in jolts]):
+def is_infeasible(buttons, jolts, cnt, tally):
+    if (cnt > tally.best) or (len(buttons) == 0) or any([x < 0 for x in jolts]):
+        return True
+    if tally.is_overtime():
         return True
     needed = set([i for i, x in enumerate(jolts) if x > 0]) 
     available = set.union(*[set(x) for x in buttons])
@@ -46,18 +50,26 @@ def is_possible(button, jolts):
     return True
 
 
-def dfs(buttons, jolts, cnt=0, best=None):
-    if best == None:
-        best = [300]
+@dataclass
+class Tally:
+    best = 300
+    start_ts: float = field(default_factory=time)
+    def is_overtime(self):
+        return time() - self.start_ts > 5
+
+
+def dfs(buttons, jolts, cnt=0, tally=None):
+    tally = tally or Tally()
+
     if all([x==0 for x in jolts]):
-        best[0] = min(best[0], cnt)
+        tally.best = min(tally.best, cnt)
         return cnt
     if (_state := do_forced_moves(buttons, jolts, cnt)):
         return dfs(*_state)
 
     buttons = [b for b in buttons if is_possible(b, jolts)]
 
-    if is_infeasible(buttons, jolts, cnt, best):
+    if is_infeasible(buttons, jolts, cnt, tally):
         return 999
 
     _pressed = list(jolts)
@@ -65,29 +77,28 @@ def dfs(buttons, jolts, cnt=0, best=None):
         _pressed[b] -= 1
 
     return min(
-        dfs(buttons, _pressed, cnt + 1, best),
-        dfs(buttons[1:], jolts, cnt, best),
+        dfs(buttons, _pressed, cnt + 1, tally),
+        dfs(buttons[1:], jolts, cnt, tally),
     )
 
 
-
-machine = machines[44]
+machine = machines[18]
 _, buttons, jolts = machine
 %time dfs(buttons, list(jolts))
 
 def solve_all(machines):
-    a2 = 0
-    for i, machine in enumerate(machines):
-        if i in [18, 21, 33, 36]:
-            continue
+    problems = 0
+    for machine in tqdm(machines):
         _, buttons, jolts = machine
-        ilp = solve_ilp(machine)
+        # ilp = solve_ilp(machine)
 
         a = dfs(buttons, list(jolts))
-        print(i, a, a == ilp)
-    return a2
+        if a == 999:
+            problems += 1
+    print(f"Unsolved: {problems}")
 
-a2 = solve_all(machines)
+solve_all(machines)
+
 
 def solve_ilp(machine):
     _, buttons, jolts = machine
@@ -109,20 +120,3 @@ def solve_ilp(machine):
     solver = cp_model.CpSolver()
     solver.Solve(model)
     return sum(solver.Value(v) for v in x)
-
-
-a2 = sum(map(solve_ilp, machines))
-
-print_answers(a1, a2, day=10)
-
-import numpy as np
-
-d = len(buttons)
-len(jolts)
-A = np.zeros((len(buttons), len(jolts)), int)
-
-for i, b in enumerate(buttons):
-    for x in b:
-        A[i, x] = 1
-
-A
