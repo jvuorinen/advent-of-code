@@ -19,6 +19,12 @@ for line in raw:
 
 
 def do_forced_moves(buttons, jolts, cnt):
+    update = False
+    while _state := _do_forced_moves(buttons, jolts, cnt):
+        buttons, jolts, cnt, update = _state
+    return buttons, jolts, cnt, update
+
+def _do_forced_moves(buttons, jolts, cnt):
     for i, n in enumerate(jolts):
         if (n > 0) and len(bs := [b for b in buttons if i in b]) == 1:
             # print(f"forced! {buttons} {jolts} {cnt} =>")
@@ -29,7 +35,7 @@ def do_forced_moves(buttons, jolts, cnt):
             cnt = cnt + n
             # print(f"{buttons} {jolts} {cnt}")
             # print()
-            return buttons, jolts, cnt
+            return buttons, jolts, cnt, True
 
 def is_infeasible(buttons, jolts, cnt, tally):
     if (cnt > tally.best) or (len(buttons) == 0) or any([x < 0 for x in jolts]):
@@ -55,7 +61,7 @@ class Tally:
     best = 300
     start_ts: float = field(default_factory=time)
     def is_overtime(self):
-        return time() - self.start_ts > 5
+        return time() - self.start_ts > 10
 
 
 def dfs(buttons, jolts, cnt=0, tally=None):
@@ -64,8 +70,10 @@ def dfs(buttons, jolts, cnt=0, tally=None):
     if all([x==0 for x in jolts]):
         tally.best = min(tally.best, cnt)
         return cnt
-    if (_state := do_forced_moves(buttons, jolts, cnt)):
-        return dfs(*_state)
+
+    buttons, jolts, cnt, update = do_forced_moves(buttons, jolts, cnt)
+    if update:
+        return dfs(buttons, jolts, cnt, tally)
 
     buttons = [b for b in buttons if is_possible(b, jolts)]
 
@@ -95,10 +103,18 @@ def solve_all(machines):
         a = dfs(buttons, list(jolts))
         if a == 999:
             problems += 1
+        # print(a, i, len(buttons))
     print(f"Unsolved: {problems}")
 
 solve_all(machines)
 
+import numpy as np
+
+A = np.zeros((len(buttons), len(jolts)), int)
+for i, b in enumerate(buttons):
+    for x in b:
+        A[i, x] = 1
+A
 
 def solve_ilp(machine):
     _, buttons, jolts = machine
@@ -119,4 +135,5 @@ def solve_ilp(machine):
 
     solver = cp_model.CpSolver()
     solver.Solve(model)
+    
     return sum(solver.Value(v) for v in x)
