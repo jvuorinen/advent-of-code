@@ -16,27 +16,6 @@ for line in raw:
     machines.append((target, buttons, jolts))
 
 
-def build_lookups(buttons):
-    everybody = set.union(*[set(b) for b in buttons])
-    nb = len(buttons)
-
-    cant_avoid = []
-    for i in range(nb):
-        d = {}
-        for e in everybody:
-            relevant = [x for x in buttons[i:] if e in x]
-            omnipresent = {ee for ee in everybody if all([ee in x for x in relevant])} - {e}
-            if omnipresent:
-                d[e] = omnipresent
-        cant_avoid.append(d)
-
-    available = []
-    for i in range(nb):
-        available.append(set.union(*[set(x) for x in buttons[i:]]))
-
-    return cant_avoid, available
-
-
 def do_forced_moves(buttons, jolts, cnt):
     for i, n in enumerate(jolts):
         if (n > 0) and len(bs := [b for b in buttons if i in b]) == 1:
@@ -48,70 +27,61 @@ def do_forced_moves(buttons, jolts, cnt):
             cnt = cnt + n
             # print(f"{buttons} {jolts} {cnt}")
             # print()
-            return jolts, cnt
-    return jolts, cnt
+            return buttons, jolts, cnt
+
+def is_infeasible(buttons, jolts, cnt):
+    if (cnt > 300) or (len(buttons) == 0) or any([x < 0 for x in jolts]):
+        return True
+    needed = set([i for i, x in enumerate(jolts) if x > 0]) 
+    available = set.union(*[set(x) for x in buttons])
+    if not ((needed & available) == needed):
+        return True
+    return False
 
 
-def dfs(buttons, jolts, ix=0, cnt=0, cant_avoid=None, available=None, tally=None):
-    if tally is None:
-        tally = {
-            "best": 500,
-            "start_time": time(),
-        }
-    if cnt > 300:
+def is_possible(button, jolts):
+    bs = button
+    if any([i in bs for i in button if jolts[i] == 0]):
+        return False
+    return True
+
+
+def dfs(buttons, jolts, cnt=0):
+    if all([x==0 for x in jolts]):
+        return cnt
+    if (_state := do_forced_moves(buttons, jolts, cnt)):
+        return dfs(*_state)
+
+    buttons = [b for b in buttons if is_possible(b, jolts)]
+
+    if is_infeasible(buttons, jolts, cnt):
         return
-
-    if cant_avoid is None:
-        cant_avoid, available = build_lookups(buttons)
-    # print(jolts, ix, cnt, br)
-    if len(buttons) == 0:
-        if sum(jolts) == 0:
-            return cnt
-        return 
-
-    jolts, cnt = do_forced_moves(buttons, jolts, cnt)
-
-    # Infeasibilty checks
-    needed = set([i for i, x in enumerate(jolts) if x > 0])
-    if any([x < 0 for x in jolts]):
-        return
-
-    if not ((needed & available[ix]) == needed):
-        return
-
-    dontpush = set([i for i, x in enumerate(jolts) if x == 0])
-    for x in needed:
-        if dontpush & cant_avoid[ix].get(x, set()):
-            return
 
     _pressed = list(jolts)
     for b in buttons[0]:
         _pressed[b] -= 1
 
-    best = (
-        dfs(buttons[:], _pressed, ix, cnt + 1, cant_avoid, available, tally)
-        or dfs(buttons[1:], _pressed, ix + 1, cnt + 1, cant_avoid, available, tally)
-        or dfs(buttons[1:], jolts, ix + 1, cnt, cant_avoid, available, tally)
-    )
-
-    return best
+    return dfs(buttons, _pressed, cnt + 1) or dfs(buttons[1:], jolts, cnt)
 
 
-machine = machines[18]
+
+machine = machines[44]
 _, buttons, jolts = machine
-dfs(buttons, list(jolts))
+%time dfs(buttons, list(jolts))
 
 def solve_all(machines):
     a2 = 0
     for i, machine in enumerate(machines):
+        if i in [18, 21, 33, 36]:
+            continue
         _, buttons, jolts = machine
-        # solve_ilp(machine)
+        ilp = solve_ilp(machine)
 
-        a2 += dfs(buttons, list(jolts))
-        print(i, a2)
+        a = dfs(buttons, list(jolts))
+        print(i, a, a == ilp)
     return a2
 
-%time a2 = solve_all(machines)
+a2 = solve_all(machines)
 
 def solve_ilp(machine):
     _, buttons, jolts = machine
@@ -138,3 +108,15 @@ def solve_ilp(machine):
 a2 = sum(map(solve_ilp, machines))
 
 print_answers(a1, a2, day=10)
+
+import numpy as np
+
+d = len(buttons)
+len(jolts)
+A = np.zeros((len(buttons), len(jolts)), int)
+
+for i, b in enumerate(buttons):
+    for x in b:
+        A[i, x] = 1
+
+A
