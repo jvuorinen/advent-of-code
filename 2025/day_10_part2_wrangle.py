@@ -1,5 +1,8 @@
+import numpy as np
 from time import time
 from dataclasses import dataclass, field
+from itertools import combinations, product
+from collections import defaultdict
 from re import findall
 from tqdm import tqdm
 from ortools.sat.python import cp_model
@@ -7,6 +10,7 @@ from utils import read, print_answers
 
 raw = read(2025, 10).split("\n")
 
+TIME_LIMIT = 1000
 
 machines = []
 for line in raw:
@@ -37,6 +41,16 @@ def _do_forced_moves(buttons, jolts, cnt):
             # print()
             return buttons, jolts, cnt, True
 
+
+def can_produce_diffs(jolts, buttons):
+    v = np.array(jolts)
+    diffs = np.where(v[:, None] - v[None, :] > 0)
+    for a, b in zip(*diffs):
+        if not any([(a in btn) and (b not in btn) for btn in buttons]):
+            return False
+    return True
+
+
 def is_infeasible(buttons, jolts, cnt, tally):
     if (cnt > tally.best) or (len(buttons) == 0) or any([x < 0 for x in jolts]):
         return True
@@ -45,6 +59,8 @@ def is_infeasible(buttons, jolts, cnt, tally):
     needed = set([i for i, x in enumerate(jolts) if x > 0]) 
     available = set.union(*[set(x) for x in buttons])
     if not ((needed & available) == needed):
+        return True
+    if len(buttons) < 8 and not can_produce_diffs(tuple(jolts), tuple(buttons)):
         return True
     return False
 
@@ -61,7 +77,7 @@ class Tally:
     best = 300
     start_ts: float = field(default_factory=time)
     def is_overtime(self):
-        return time() - self.start_ts > 10
+        return time() - self.start_ts > TIME_LIMIT
 
 
 def dfs(buttons, jolts, cnt=0, tally=None):
@@ -108,7 +124,6 @@ def solve_all(machines):
 
 solve_all(machines)
 
-import numpy as np
 
 A = np.zeros((len(buttons), len(jolts)), int)
 for i, b in enumerate(buttons):
