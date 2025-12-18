@@ -17,6 +17,7 @@ dependencies = [
     "pylint",
     "ruff",
     "ortools>=9.14.6206",
+    "line-profiler>=5.0.0",
 ]
 
 [tool.ruff]
